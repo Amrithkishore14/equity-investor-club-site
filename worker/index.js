@@ -65,12 +65,19 @@ class Instagram {
   }
 }
 
-class ToolsLink {
+const NAV = [['/', 'Home'], ['/learn', 'Learn'], ['/articles', 'Articles'], ['/holdings/', 'My stocks'], ['/tools', 'Tools'], ['/glossary', 'Glossary'], ['/about', 'About']];
+class StandardNav {
+  constructor(path) { this.path = path.replace(/\/$/, '') || '/'; }
   element(el) {
-    el.append('<a href="/articles">Articles</a><a href="/holdings">My stocks</a><a href="/tools">Tools</a>', { html: true });
+    const isActive = (h) => { const b = h.replace(/\/$/, '') || '/'; return b === '/' ? this.path === '/' : this.path === b || this.path.startsWith(b + '/') || (b === '/tools' && /calculator|risk-quiz/.test(this.path)) || (b === '/holdings' && this.path.startsWith('/stocks')); };
+    el.setInnerContent(NAV.map(([h, t]) => `<a href="${h}"${isActive(h) ? ' class="active" aria-current="page"' : ''}>${t}</a>`).join(''), { html: true });
   }
 }
-
+class StandardActions {
+  element(el) {
+    el.setInnerContent('<label class="toggle" for="themeSwitch"><input type="checkbox" id="themeSwitch" aria-label="Light theme" /><span>Light</span></label>', { html: true });
+  }
+}
 class HideUnused {
   element(el) {
     el.append('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600&display=swap"><link rel="stylesheet" href="/public/css/eic-2026.css"><link rel="stylesheet" href="/public/css/eic-fx.css">', { html: true });
@@ -203,7 +210,7 @@ export default {
     }
     const type = res.headers.get('content-type') || '';
     if (type.includes('text/html'))
-      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links a[href="/articles"]', new Remove()).on('.nav-links a[href="/tools"]', new Remove()).on('.nav-links', new ToolsLink()).on('head', new HideUnused()).on('link[rel="canonical"]', new HostFix(url.origin)).on('meta[property^="og:"]', new HostFix(url.origin)).on('meta[name^="twitter:"]', new HostFix(url.origin)).on('form#contactForm', new ContactCta()).on('form#inquiryForm', new ContactCta()).on('.hero-visual', new MarketBoard()).on('section.hero', new HeatMap()).on('body', new FxAssets()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
+      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links', new StandardNav(url.pathname)).on('header .actions', new StandardActions()).on('head', new HideUnused()).on('link[rel="canonical"]', new HostFix(url.origin)).on('meta[property^="og:"]', new HostFix(url.origin)).on('meta[name^="twitter:"]', new HostFix(url.origin)).on('form#contactForm', new ContactCta()).on('form#inquiryForm', new ContactCta()).on('.hero-visual', new MarketBoard()).on('section.hero', new HeatMap()).on('body', new FxAssets()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
     return security(res);
   },
 };
