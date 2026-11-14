@@ -70,7 +70,7 @@ async function coverImage(env, prompt) {
   return r.image; // base64 jpeg
 }
 
-const slugify = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+const slugify = (s) => { const x = String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); return x.length <= 60 ? x : x.slice(0, 60).replace(/-[^-]*$/, ''); };
 
 // ---------- Gemini (watches the YouTube video directly, writes English + Tamil) ----------
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-flash-latest'];
@@ -84,7 +84,7 @@ Return JSON with these keys:
 "title_ta", "summary_ta", "body_ta" (natural, fluent Tamil versions of the same, same headings in Tamil, markdown),
 "quiz" (array of 3 objects {"q", "options" (4 short options), "answer" (index 0-3)}, in English, based on the article),
 "image_prompt" (a short description of a clean editorial illustration for the cover; no text, no logos, no real people),
-"check" (one short sentence telling the editor what to double-check, or "").`;
+"check" (one short sentence naming the specific fact or number from the video the editor should verify before publishing, for example a rupee figure or a date; or "" if there is nothing).`;
 
 async function geminiArticle(env, video) {
   let lastErr = '';
