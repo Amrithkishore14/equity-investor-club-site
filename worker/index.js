@@ -72,7 +72,7 @@ export default {
     }
     const type = res.headers.get('content-type') || '';
     if (type.includes('text/html'))
-      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).transform(res));
+      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
     return security(res);
   },
 };
