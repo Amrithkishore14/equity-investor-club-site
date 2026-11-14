@@ -57,7 +57,7 @@ function extractJson(s) {
 }
 
 async function coverImage(env, prompt) {
-  const r = await env.AI.run(IMAGE, { prompt: `${prompt}. Flat editorial illustration, deep navy and emerald green palette, finance theme, no text`, steps: 6 });
+  const r = await env.AI.run(IMAGE, { prompt: `${prompt}. Photorealistic editorial news photo, natural light, sharp detail, 16:9, no text, no watermark, no logos`, steps: 8 });
   return r.image; // base64 jpeg
 }
 
@@ -94,7 +94,7 @@ Return JSON with these keys:
 "quiz" (array of 3 objects {"q", "options" (4 short options), "answer" (index 0-3)}, in English),
 "tip" (one short, original money lesson for beginners linked to this topic, max 25 words, not a quote and not attributed to anyone),
 "companies" (array of up to 2 objects {"name", "nse_symbol"} for Indian listed companies that are the main subject, e.g. {"name":"Tata Steel","nse_symbol":"TATASTEEL"}; empty array if none),
-"image_prompt" (a specific scene for the cover that matches the subject, e.g. for a steel company "a modern steel plant with glowing molten steel and rolled steel coils"; no text, no logos, no real people),
+"image_prompt" (a photorealistic scene that clearly shows THIS story's subject: the company's real products, plants or stores, or the actual asset. Examples: Tata Steel -> "a Tata-style integrated steel plant with glowing molten steel and stacked steel coils"; ITC -> "cigarette packs, Aashirvaad-style atta bags, notebooks and paperboard on a shop counter in India"; gold -> "stacks of gold bars and Indian gold jewellery"; banks -> "a busy Indian bank branch". Always set it in India where relevant. No text, no logos, no real people's faces),
 "check" (one short sentence naming the specific fact or number the editor should verify, e.g. a rupee figure or date; or "").`;
 
 async function geminiArticle(env, video) {
@@ -146,8 +146,9 @@ export async function createDraft(env, { force = false, videoId = '', publish = 
   if (!videoId && !force && day !== today) return { ok: true, skipped: `no new video today (latest: ${video.published})` };
   if (sameDay.length && !replace && !force) return { ok: true, skipped: `already have a post for ${day}` };
 
-  const a = await geminiArticle(env, video);
-  if (!a.understood || !a.title || !a.body) {
+  const a0 = await geminiArticle(env, video);
+  const a = a0 && a0.understood ? await cleanArticle(env, a0) : a0;
+  if (!a || !a.understood || !a.title || !a.body) {
     if (videoId) return { ok: true, skipped: `video not understood: ${video.title}` };
     const slug = `${day}-auto-robot-note`;
     const fm = { title: `Robot note: could not read today's topic`, date: new Date().toISOString(), draft: true, hold: true, auto: true,
@@ -225,4 +226,81 @@ export async function pruneOld(env) {
     removed.push(f.name);
   }
   return { ok: true, removed };
+}
+
+// ---------- Never reveal where the topic came from ----------
+const LEAK = /\b(videos?|youtube|you\s?tube|channel|presenter|speaker|vlogger|anand|srinivas\w*|money\s*pechu|according to (him|the host))\b/i;
+export const hasLeak = (obj) => LEAK.test(JSON.stringify(obj));
+
+async function rewriteClean(env, obj) {
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: `Rewrite this JSON so that no text mentions a video, YouTube, a channel, a presenter or speaker, or any person as the source of the information. Write it as Equity Investor Club's own explanation; citations of news outlets (e.g. "as reported by The Economic Times") are fine. Keep everything else, keep the same keys and the same languages (English and Tamil). Return the JSON only.\n\n${JSON.stringify(obj)}` }] }],
+      generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
+    }),
+  });
+  if (!res.ok) throw new Error(`Gemini rewrite ${res.status}`);
+  const j = await res.json();
+  return extractJson((j.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join(''));
+}
+
+export async function cleanArticle(env, a) {
+  const keys = ['title', 'summary', 'body', 'title_ta', 'summary_ta', 'body_ta', 'quiz', 'tip', 'check'];
+  for (let i = 0; i < 2; i++) {
+    const part = Object.fromEntries(keys.filter((k) => a[k] != null).map((k) => [k, a[k]]));
+    if (!hasLeak(part)) return a;
+    Object.assign(a, await rewriteClean(env, part));
+  }
+  return a;
+}
+
+// Scan published robot articles and clean any that mention the source.
+export async function scrubAll(env) {
+  const yaml = await import('./yaml-lite.js');
+  const files = ((await gh(env, `contents/${DIR}`)) || []).filter((f) => /-auto-.*\.md$/.test(f.name));
+  const fixed = [];
+  for (const f of files) {
+    const file = await gh(env, `contents/${f.path}`);
+    const text = unb64(file.content);
+    const m = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+    if (!m) continue;
+    const fm = yaml.parse(m[1]);
+    const a = { ...fm, body: m[2] };
+    if (!hasLeak({ title: a.title, summary: a.summary, body: a.body, title_ta: a.title_ta, summary_ta: a.summary_ta, body_ta: a.body_ta, quiz: a.quiz, tip: a.tip, note: a.note, source: a.source })) continue;
+    await cleanArticle(env, a);
+    delete a.source;
+    const body = String(a.body).trim(); delete a.body;
+    const out = `---\n${Object.entries(a).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n')}\n---\n${body}\n`;
+    await putFile(env, f.path, b64(out), `Tidy wording: ${f.name}`, file.sha);
+    fixed.push(f.name);
+  }
+  return { ok: true, fixed };
+}
+
+// Regenerate cover images for robot articles so each picture matches its story.
+export async function redoCovers(env, only = '') {
+  const yaml = await import('./yaml-lite.js');
+  const files = ((await gh(env, `contents/${DIR}`)) || []).filter((f) => /-auto-.*\.md$/.test(f.name) && (!only || f.name.includes(only)));
+  const done = [];
+  for (const f of files) {
+    const file = await gh(env, `contents/${f.path}`);
+    const m = unb64(file.content).match(/^---\n([\s\S]*?)\n---/);
+    if (!m) continue;
+    const fm = yaml.parse(m[1]);
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+      body: JSON.stringify({ contents: [{ parts: [{ text: `Write one photorealistic image prompt (max 40 words) for the cover of this Indian finance article. It must clearly show the article's real subject: the named company's actual products, plants, stores or the specific asset (e.g. gold bars, steel coils, cigarette packs and FMCG goods, bank branch), set in India. No text, no logos, no faces. Reply with the prompt only.\n\nTitle: ${fm.title}\nSummary: ${fm.summary || ''}${fm.chart ? `\nCompany: ${fm.chart.name}` : ''}` }] }], generationConfig: { temperature: 0.4 } }),
+    });
+    if (!res.ok) continue;
+    const prompt = ((await res.json()).candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+    const img = await coverImage(env, prompt || fm.title);
+    if (!img) continue;
+    const imgPath = `site/public/uploads/auto/${f.name.replace(/\.md$/, '.jpg')}`;
+    const existing = await gh(env, `contents/${imgPath}`);
+    await putFile(env, imgPath, img, `Better cover for ${fm.title}`, existing?.sha);
+    if (!fm.cover) { /* article without cover field: leave article untouched */ }
+    done.push(f.name);
+  }
+  return { ok: true, covers: done.length };
 }

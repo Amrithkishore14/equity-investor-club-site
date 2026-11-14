@@ -5,7 +5,7 @@
 import stocks from './stocks.json';
 import posts from './posts.json';
 import { technicals, refreshFundamentals, heldSymbols } from './stocks-analysis.js';
-import { createDraft, publishToday, pruneOld, listRecent, londonParts } from './autopost.js';
+import { createDraft, publishToday, pruneOld, listRecent, scrubAll, redoCovers, londonParts } from './autopost.js';
 
 const IG = 'https://www.instagram.com/equityinvestorclub/';
 const NOTICE = 'Member accounts are not open yet. Follow @equityinvestorclub on Instagram for updates.';
@@ -96,6 +96,8 @@ export default {
         const q = (k) => url.searchParams.get(k);
         const r = task === 'publish' ? await publishToday(env)
           : task === 'list' ? await listRecent(Number(q('days') || 10))
+          : task === 'scrub' ? await scrubAll(env)
+          : task === 'covers' ? await redoCovers(env, q('only') || '')
           : task === 'fundamentals' ? await refreshFundamentals(env, q('only') || '')
           : await createDraft(env, { force: q('force') === '1', videoId: q('video') || '', publish: q('publish') === '1', replace: q('replace') === '1' });
         return json(r);
