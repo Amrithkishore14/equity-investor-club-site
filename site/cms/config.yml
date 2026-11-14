@@ -41,3 +41,19 @@ collections:
           - { name: answer, label: "Correct option number (0 = first)", widget: number, value_type: int, min: 0, max: 5 }
       - { name: source, label: "Source credit", widget: string, required: false }
       - { name: auto, label: "Made by the robot", widget: boolean, default: false, required: false }
+  - name: settings
+    label: Holdings disclosure
+    files:
+      - name: holdings
+        label: "Stocks I hold (names only, no values)"
+        file: content/holdings.json
+        fields:
+          - { name: updated, label: "Last updated", widget: datetime }
+          - name: stocks
+            label: Stocks
+            widget: list
+            summary: "{{fields.name}} ({{fields.symbol}})"
+            fields:
+              - { name: name, label: "Company name", widget: string }
+              - { name: symbol, label: "NSE symbol, e.g. TATASTEEL", widget: string }
+              - { name: exchange, label: Exchange, widget: select, options: [NSE, BSE], default: NSE }

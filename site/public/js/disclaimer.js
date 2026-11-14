@@ -1,5 +1,5 @@
 (function() {
-  const disclaimerText = `Disclaimer:\nEquity Investor Club is not a SEBI registered advisor.\nAll content shared on this website is for educational and learning purposes only.\nMarket updates are derived from publicly available news and media sources.\nUsers are advised to do their own analysis before making any investment decisions.\nEquity Investor Club does not provide investment, trading, or financial advice.`;
+  const disclaimerText = `Disclaimer:\nEquity Investor Club and its founder are not registered with SEBI as an Investment Adviser or Research Analyst.\nAll content on this website is for education only and is not investment advice or a recommendation to buy, sell or hold any security.\nInvestments in the securities market are subject to market risks. Read all related documents carefully before investing.\nConsult a SEBI-registered investment adviser before making investment decisions.`;
 
   function makeBadge() {
     const wrap = document.createElement('div');

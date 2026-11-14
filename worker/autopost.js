@@ -34,15 +34,6 @@ const putFile = (env, path, contentB64, message, sha) =>
   gh(env, `contents/${path}`, { method: 'PUT', body: JSON.stringify({ message, content: contentB64, branch: 'main', ...(sha ? { sha } : {}) }) });
 
 // ---------- YouTube ----------
-async function latestVideo() {
-  const xml = await (await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`, { headers: { 'User-Agent': UA } })).text();
-  const entry = xml.split('<entry>')[1];
-  if (!entry) return null;
-  const pick = (tag) => decode((entry.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`)) || [])[1] || '');
-  return { id: pick('yt:videoId'), title: pick('title'), published: pick('published'), description: pick('media:description') };
-}
-
-// ---------- AI ----------
 function extractJson(s) {
   if (s && typeof s === 'object') return s;
   const a = s.indexOf('{'), b = s.lastIndexOf('}');
@@ -70,21 +61,40 @@ async function coverImage(env, prompt) {
   return r.image; // base64 jpeg
 }
 
+async function priceChart(symbol) {
+  const sym = String(symbol || '').toUpperCase().replace(/[^A-Z0-9&-]/g, '');
+  if (!sym) return null;
+  try {
+    const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}.NS?range=1mo&interval=1d`, { headers: { 'User-Agent': UA } });
+    if (!r.ok) return null;
+    const res = (await r.json())?.chart?.result?.[0];
+    const ts = res?.timestamp || [], close = res?.indicators?.quote?.[0]?.close || [];
+    const points = ts.map((t, i) => [new Date(t * 1000).toISOString().slice(0, 10), close[i] == null ? null : Math.round(close[i] * 100) / 100]).filter((p) => p[1] != null);
+    return points.length >= 5 ? { symbol: sym, points } : null;
+  } catch (e) { return null; }
+}
+
 const slugify = (s) => { const x = String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); return x.length <= 60 ? x : x.slice(0, 60).replace(/-[^-]*$/, ''); };
 
 // ---------- Gemini (watches the YouTube video directly, writes English + Tamil) ----------
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-flash-latest'];
-const PROMPT = `You are the editor of Equity Investor Club, a financial-literacy website for beginner investors in India.
-Watch this video (it is usually in Tamil) and write an ORIGINAL educational article in your own words about its main ideas.
-Rules: do not copy sentences from the video; only use facts and numbers actually said in the video; never give buy/sell/hold advice on a specific stock - explain the idea and what a beginner should understand instead; keep the tone calm and simple.
+const PROMPT = `You write for Equity Investor Club, a financial-literacy website for beginner investors in India, founded by Amrith Kishore M.
+Watch this video (usually in Tamil) to learn today's topic, then write an ORIGINAL educational article in your own words, as Equity Investor Club.
+Rules:
+- Never mention the video, YouTube, any channel, presenter, speaker or "an expert said". Write as our own explanation of the topic.
+- Do not copy sentences. Only use facts and numbers actually stated in the video; if unsure of a number, leave it out.
+- Never give buy/sell/hold advice on a specific stock; explain the idea and what a beginner should understand.
+- Calm, simple language for beginners.
 Return JSON with these keys:
 "understood": true if you could actually watch and follow the video, otherwise false,
 "title" (max 70 chars), "summary" (1-2 sentences), "category" (one of: Basics, Stock market, Mutual funds, Personal finance, Market update),
 "body" (English markdown, 350-600 words, with ## headings "What happened", "What it means for you", "Key takeaways" (bullet list) and "Jargon buster" (2-3 terms)),
 "title_ta", "summary_ta", "body_ta" (natural, fluent Tamil versions of the same, same headings in Tamil, markdown),
-"quiz" (array of 3 objects {"q", "options" (4 short options), "answer" (index 0-3)}, in English, based on the article),
-"image_prompt" (a short description of a clean editorial illustration for the cover; no text, no logos, no real people),
-"check" (one short sentence naming the specific fact or number from the video the editor should verify before publishing, for example a rupee figure or a date; or "" if there is nothing).`;
+"quiz" (array of 3 objects {"q", "options" (4 short options), "answer" (index 0-3)}, in English),
+"tip" (one short, original money lesson for beginners linked to this topic, max 25 words, not a quote and not attributed to anyone),
+"companies" (array of up to 2 objects {"name", "nse_symbol"} for Indian listed companies that are the main subject, e.g. {"name":"Tata Steel","nse_symbol":"TATASTEEL"}; empty array if none),
+"image_prompt" (a specific scene for the cover that matches the subject, e.g. for a steel company "a modern steel plant with glowing molten steel and rolled steel coils"; no text, no logos, no real people),
+"check" (one short sentence naming the specific fact or number the editor should verify, e.g. a rupee figure or date; or "").`;
 
 async function geminiArticle(env, video) {
   let lastErr = '';
@@ -106,47 +116,71 @@ async function geminiArticle(env, video) {
 }
 
 // ---------- Jobs ----------
-export async function createDraft(env, { force = false } = {}) {
+async function recentVideos() {
+  const xml = await (await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`, { headers: { 'User-Agent': UA } })).text();
+  return xml.split('<entry>').slice(1).map((entry) => {
+    const pick = (tag) => decode((entry.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`)) || [])[1] || '');
+    return { id: pick('yt:videoId'), title: pick('title'), published: pick('published') };
+  });
+}
+
+export async function createDraft(env, { force = false, videoId = '', publish = false, replace = false } = {}) {
   if (!env.GITHUB_TOKEN) return { ok: false, reason: 'GITHUB_TOKEN secret missing' };
   if (!env.GEMINI_API_KEY) return { ok: false, reason: 'GEMINI_API_KEY secret missing' };
+  const videos = await recentVideos();
+  const video = videoId ? videos.find((v) => v.id === videoId) : videos[0];
+  if (!video) return { ok: false, reason: 'video not found in the channel feed' };
   const today = londonParts().date;
+  const day = londonParts(new Date(video.published)).date;
   const existing = (await gh(env, `contents/${DIR}`)) || [];
-  if (!force && existing.some((f) => f.name.startsWith(`${today}-auto-`))) return { ok: true, skipped: 'already posted today' };
-
-  const video = await latestVideo();
-  if (!video) return { ok: false, reason: 'could not read the channel feed' };
-  if (londonParts(new Date(video.published)).date !== today && !force) return { ok: true, skipped: `no new video today (latest: ${video.published})` };
+  const sameDay = existing.filter((f) => f.name.startsWith(`${day}-auto-`));
+  if (!videoId && !force && day !== today) return { ok: true, skipped: `no new video today (latest: ${video.published})` };
+  if (sameDay.length && !replace && !force) return { ok: true, skipped: `already have a post for ${day}` };
 
   const a = await geminiArticle(env, video);
   if (!a.understood || !a.title || !a.body) {
-    // Don't guess. Leave a held note in the CMS instead of an article.
-    const slug = `${today}-auto-robot-note`;
-    const fm = { title: `Robot note: could not read today's video`, date: new Date().toISOString(), draft: true, hold: true, auto: true,
-      note: `The robot could not properly follow today's video ("${video.title}"), so it did not write an article. You can write one yourself or delete this note.` };
-    await putFile(env, `${DIR}/${slug}.md`, b64(`---\n${Object.entries(fm).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n')}\n---\nhttps://www.youtube.com/watch?v=${video.id}\n`), 'Robot note: video not understood');
+    if (videoId) return { ok: true, skipped: `video not understood: ${video.title}` };
+    const slug = `${day}-auto-robot-note`;
+    const fm = { title: `Robot note: could not read today's topic`, date: new Date().toISOString(), draft: true, hold: true, auto: true,
+      note: `The robot could not properly follow today's source, so it did not write an article. You can write one yourself or delete this note.` };
+    await putFile(env, `${DIR}/${slug}.md`, b64(`---\n${Object.entries(fm).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n')}\n---\n`), 'Robot note');
     return { ok: true, note: slug };
   }
 
-  const slug = `${today}-auto-${slugify(a.title)}`;
+  if (replace) for (const f of sameDay) {
+    await gh(env, `contents/${f.path}`, { method: 'DELETE', body: JSON.stringify({ message: `Replace ${f.name}`, sha: f.sha, branch: 'main' }) });
+    const img = await gh(env, `contents/site/public/uploads/auto/${f.name.replace(/\.md$/, '.jpg')}`);
+    if (img && img.sha) await gh(env, `contents/${img.path}`, { method: 'DELETE', body: JSON.stringify({ message: `Remove ${img.name}`, sha: img.sha, branch: 'main' }) });
+  }
+
+  const slug = `${day}-auto-${slugify(a.title)}`;
   let cover = '';
-  let note = a.check ? `Robot's check: ${a.check}` : '';
+  let note = a.check ? `Please verify: ${a.check}` : '';
   try {
     const img = await coverImage(env, a.image_prompt || a.title);
     if (img) { await putFile(env, `site/public/uploads/auto/${slug}.jpg`, img, `Cover image for ${a.title}`); cover = `/public/uploads/auto/${slug}.jpg`; }
   } catch (e) { note += ' (Cover image could not be generated.)'; }
+  const companies = Array.isArray(a.companies) ? a.companies.slice(0, 2) : [];
+  let chart = null;
+  for (const c of companies) { chart = await priceChart(c.nse_symbol); if (chart) { chart.name = c.name; break; } }
 
+  const when = day === today ? new Date() : new Date(video.published);
   const fm = {
-    title: a.title, date: new Date().toISOString(), summary: a.summary || '', category: a.category || 'Market update', cover,
-    draft: true, hold: false, auto: true, note: note.trim(),
-    source: `Money Pechu (Anand Srinivasan), video of ${today}`,
-    title_ta: a.title_ta || '', summary_ta: a.summary_ta || '',
+    title: a.title, date: when.toISOString(), summary: a.summary || '', category: a.category || 'Market update', cover,
+    draft: !publish, hold: false, auto: true, note: note.trim(),
+    title_ta: a.title_ta || '', summary_ta: a.summary_ta || '', tip: a.tip || '',
     quiz: Array.isArray(a.quiz) ? a.quiz.slice(0, 3) : [],
+    ...(chart ? { chart } : {}),
     body_ta: a.body_ta || '',
   };
-  // YAML is a superset of JSON, so each value is written as JSON.
   const yaml = Object.entries(fm).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n');
-  await putFile(env, `${DIR}/${slug}.md`, b64(`---\n${yaml}\n---\n${String(a.body).trim()}\n`), `Robot draft: ${a.title}`);
-  return { ok: true, created: slug, video: video.title };
+  await putFile(env, `${DIR}/${slug}.md`, b64(`---\n${yaml}\n---\n${String(a.body).trim()}\n`), `${publish ? 'New article' : 'Robot draft'}: ${a.title}`);
+  return { ok: true, created: slug, chart: chart ? chart.symbol : null };
+}
+
+export async function listRecent(days = 10) {
+  const cutoff = Date.now() - days * 864e5;
+  return (await recentVideos()).filter((v) => Date.parse(v.published) >= cutoff).map((v) => ({ id: v.id, title: v.title, date: londonParts(new Date(v.published)).date }));
 }
 
 export async function publishToday(env) {

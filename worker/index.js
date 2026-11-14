@@ -4,11 +4,11 @@
 // Articles come from the CMS at /cms (content/articles/*.md, built by build.js).
 import stocks from './stocks.json';
 import posts from './posts.json';
-import { createDraft, publishToday, pruneOld, londonParts } from './autopost.js';
+import { createDraft, publishToday, pruneOld, listRecent, londonParts } from './autopost.js';
 
 const IG = 'https://www.instagram.com/equityinvestorclub/';
 const NOTICE = 'Member accounts are not open yet. Follow @equityinvestorclub on Instagram for updates.';
-const MEMBER_PAGES = ['/admin', '/user', '/watchlist', '/subscription-request'];
+const MEMBER_PAGES = ['/admin', '/user', '/watchlist', '/subscription-request', '/subscriptions', '/certificate'];
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
@@ -33,8 +33,14 @@ function api(url, request) {
       const results = t ? stocks.filter((s) => s.symbol.toLowerCase().includes(t) || s.stock_name.toLowerCase().includes(t)).slice(0, 15) : [];
       return json({ success: true, results });
     }
-    if (p === '/api/daily/latest') return json({ success: true, update: null });
-    if (p === '/api/news/latest') return json({ success: true, news: null });
+    const latest = posts[0];
+    const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    if (p === '/api/daily/latest') return json({ success: true, update: latest ? { id: latest.id, created_at: latest.publish_at, preview: false,
+      html: `<h3 style="margin:0 0 6px;">${esc(latest.title)}</h3>${latest.cover ? `<img src="${esc(latest.cover)}" alt="" style="width:100%;max-height:260px;object-fit:cover;border-radius:10px;margin:6px 0;">` : ''}<p>${esc(latest.excerpt)}</p><a class="btn" href="/articles/${esc(latest.slug)}">Read today's article</a>` } : null });
+    if (p === '/api/news/latest') return json({ success: true, news: latest && latest.takeaways.length ? { id: latest.id, updated_at: latest.publish_at, content: latest.takeaways.join('  •  ') } : null });
+    if (p === '/api/quote/latest') { const t = posts.find((x) => x.tip); return json({ success: true, quote: t ? { content: t.tip, publish_at: t.publish_at } : null }); }
+    if (p === '/api/weekly/latest') { const wk = posts.filter((x) => Date.now() - Date.parse(x.publish_at) < 7 * 864e5);
+      return json({ success: true, summary: wk.length ? { publish_at: wk[0].publish_at, content: wk.map((x) => `• ${x.title}: ${x.excerpt}`).join('\n') } : null }); }
     if (p === '/api/digest/latest') return json({ success: true, latest: null, archive: [] });
     if (p === '/api/poll') return json({ success: true, poll: null });
     if (p === '/api/articles') return json({ success: true, articles: posts });
@@ -43,19 +49,27 @@ function api(url, request) {
       return json({ success: false, message: 'Sign-in is switched off on this showcase.' }, 401);
     return json({ success: false, message: 'Not found' }, 404);
   }
+  if (request.method === 'POST' && ['/api/contact', '/api/inquiry', '/api/newsletter'].includes(p))
+    return json({ success: false, message: 'This form is not connected yet. Please message @equityinvestorclub on Instagram or email amrithkishore6@gmail.com.' }, 503);
   if (request.method === 'POST') return json({ success: false, message: NOTICE }, 403);
   return json({ success: false }, 405);
 }
 
 class Instagram {
   element(el) {
-    el.append(`<p class="small"><a href="${IG}" target="_blank" rel="noopener">Follow @equityinvestorclub on Instagram</a><br>Founded by <a href="https://2026-updated-portfolio.amrithkishore6.workers.dev" target="_blank" rel="noopener">Amrith Kishore M</a></p>`, { html: true });
+    el.append(`<p class="small"><a href="${IG}" target="_blank" rel="noopener">Follow @equityinvestorclub on Instagram</a><br>Founded by <a href="https://2026-updated-portfolio.amrithkishore6.workers.dev" target="_blank" rel="noopener">Amrith Kishore M</a></p><p class="small">Not registered with SEBI as an Investment Adviser or Research Analyst. Education only, not investment advice. Investments are subject to market risks. <a href="/disclaimer">Disclaimer</a> · <a href="/holdings">Holdings disclosure</a></p>`, { html: true });
   }
 }
 
 class ToolsLink {
   element(el) {
     el.append('<a href="/tools">Tools</a>', { html: true });
+  }
+}
+
+class HideUnused {
+  element(el) {
+    el.append('<style>section:has(#pollContainer),section:has(#newsletterForm),#dailyPreview{display:none!important}</style>', { html: true });
   }
 }
 
@@ -77,13 +91,16 @@ export default {
       if (!env.RUN_KEY || request.headers.get('X-Run-Key') !== env.RUN_KEY) return json({ ok: false }, 403);
       try {
         const task = url.searchParams.get('task');
-        const r = task === 'publish' ? await publishToday(env) : await createDraft(env, { force: url.searchParams.get('force') === '1' });
+        const q = (k) => url.searchParams.get(k);
+        const r = task === 'publish' ? await publishToday(env)
+          : task === 'list' ? await listRecent(Number(q('days') || 10))
+          : await createDraft(env, { force: q('force') === '1', videoId: q('video') || '', publish: q('publish') === '1', replace: q('replace') === '1' });
         return json(r);
       } catch (e) { return json({ ok: false, error: String(e.message || e) }, 500); }
     }
     if (url.pathname.startsWith('/api/')) return security(api(url, request));
     if (MEMBER_PAGES.some((m) => url.pathname === m || url.pathname.startsWith(m + '/')))
-      return Response.redirect(new URL('/login', url).toString(), 302);
+      return Response.redirect(new URL('/', url).toString(), 302);
     const res = await env.ASSETS.fetch(request);
     if (url.pathname.startsWith('/cms')) {
       const r = security(res);
@@ -92,7 +109,7 @@ export default {
     }
     const type = res.headers.get('content-type') || '';
     if (type.includes('text/html'))
-      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links', new ToolsLink()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
+      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links', new ToolsLink()).on('head', new HideUnused()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
     return security(res);
   },
 };
