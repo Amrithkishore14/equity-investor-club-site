@@ -85,6 +85,7 @@ Rules:
 - Do not copy sentences. Only use facts and numbers actually stated in the video; if unsure of a number, leave it out.
 - Never give buy/sell/hold advice on a specific stock; explain the idea and what a beginner should understand.
 - Calm, simple language for beginners.
+- Use Google Search to check the key facts against reputable news (for example The Economic Times, Mint, Business Standard, The Hindu BusinessLine, Moneycontrol, Times of India). Where a news outlet reported a fact, say so naturally in the article, e.g. "as reported by The Economic Times". Never cite or mention the video or its creator.
 Return JSON with these keys:
 "understood": true if you could actually watch and follow the video, otherwise false,
 "title" (max 70 chars), "summary" (1-2 sentences), "category" (one of: Basics, Stock market, Mutual funds, Personal finance, Market update),
@@ -97,14 +98,22 @@ Return JSON with these keys:
 "check" (one short sentence naming the specific fact or number the editor should verify, e.g. a rupee figure or date; or "").`;
 
 async function geminiArticle(env, video) {
+  // First try with Google Search (for news citations); fall back to video-only JSON mode.
+  for (const withSearch of [true, false]) {
+    try { return await geminiOnce(env, video, withSearch); } catch (e) { if (!withSearch) throw e; }
+  }
+}
+
+async function geminiOnce(env, video, withSearch) {
   let lastErr = '';
   for (const model of GEMINI_MODELS) {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
       body: JSON.stringify({
-        contents: [{ parts: [{ file_data: { file_uri: `https://www.youtube.com/watch?v=${video.id}` } }, { text: `Video title: ${video.title}\n\n${PROMPT}` }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.4 },
+        contents: [{ parts: [{ file_data: { file_uri: `https://www.youtube.com/watch?v=${video.id}` } }, { text: `Video title: ${video.title}\n\n${PROMPT}\nReply with the JSON object only.` }] }],
+        ...(withSearch ? { tools: [{ google_search: {} }] } : {}),
+        generationConfig: withSearch ? { temperature: 0.4 } : { responseMimeType: 'application/json', temperature: 0.4 },
       }),
     });
     if (!res.ok) { lastErr = `${model}: ${res.status} ${(await res.text()).slice(0, 200)}`; continue; }
