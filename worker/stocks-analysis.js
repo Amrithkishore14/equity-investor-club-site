@@ -93,8 +93,17 @@ export async function refreshFundamentals(env, only = '') {
   for (const s of holdings.stocks || []) {
     const sym = String(s.symbol).toUpperCase();
     if (only && sym !== only.toUpperCase()) continue;
-    try { all[sym] = await fundamentals(env, s.name, sym); done.push(sym); } catch (e) { failed.push(`${sym}: ${e.message}`); }
+    let ok = false;
+    for (let attempt = 0; attempt < 2 && !ok; attempt++) {
+      try { all[sym] = await fundamentals(env, s.name, sym); done.push(sym); ok = true; }
+      catch (e) {
+        if (attempt === 1 || !/429|503/.test(e.message)) failed.push(`${sym}: ${e.message}`);
+        else await new Promise((r) => setTimeout(r, 30000)); // rate limited: wait and try once more
+      }
+    }
+    if (!only) await new Promise((r) => setTimeout(r, 8000)); // stay under the free per-minute limit
   }
+  if (!done.length) return { ok: false, updated: 0, failed }; // nothing new: don't commit
   for (const k of Object.keys(all)) if (!heldSymbols().includes(k)) delete all[k];
   await gh(env, `contents/${path}`, { method: 'PUT', body: JSON.stringify({ message: `Fundamentals refresh (${done.length} updated)`, content: b64(JSON.stringify(all, null, 1)), branch: 'main', ...(cur?.sha ? { sha: cur.sha } : {}) }) });
   return { ok: true, updated: done.length, failed };
