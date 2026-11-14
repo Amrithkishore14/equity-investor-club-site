@@ -1,0 +1,61 @@
+/* Equity Investor Club - 2026 look ("market morning"). Loaded after style.css. */
+:root {
+  --bg: #0B1F24; --bg-alt: #0F2830; --card: #12303A; --line: rgba(232, 241, 238, 0.10);
+  --text: #E8F1EE; --muted: #A7BDB8; --accent-solid: #F2A93B; --accent: #F2A93B;
+  --up: #2FBF71; --down: #FF6B5E; --success: #2FBF71; --danger: #FF6B5E;
+  --shadow: 0 1px 0 rgba(255,255,255,0.03), 0 12px 28px rgba(0,0,0,0.22);
+  --display: 'Bricolage Grotesque', 'Manrope', system-ui, sans-serif;
+}
+body.light {
+  --bg: #F3F6F4; --bg-alt: #FFFFFF; --card: #FFFFFF; --line: rgba(11, 31, 36, 0.10);
+  --text: #0B1F24; --muted: #4B635E; --accent-solid: #C9801A; --accent: #C9801A;
+  --shadow: 0 1px 2px rgba(11,31,36,0.06), 0 10px 24px rgba(11,31,36,0.06);
+}
+body { font-family: 'Manrope', 'Noto Sans Tamil', system-ui, -apple-system, sans-serif; background: var(--bg); }
+:lang(ta), [data-lang="ta"] { font-family: 'Noto Sans Tamil', 'Manrope', sans-serif; line-height: 1.75; }
+body::before, body::after { display: none !important; }
+h1, h2, h3, .brand span { font-family: var(--display); letter-spacing: -0.01em; }
+h1 { font-weight: 800; }
+.section h2 { font-size: clamp(24px, 3vw, 32px); }
+
+header { background: rgba(11, 31, 36, 0.86) !important; backdrop-filter: blur(10px); border-bottom: 1px solid var(--line) !important; }
+body.light header { background: rgba(255, 255, 255, 0.9) !important; }
+.nav-links a { color: var(--muted); }
+.nav-links a:hover, .nav-links a.active { color: var(--text); background: var(--line); }
+
+.btn { background: var(--accent-solid); background-image: none; color: #1B1200; box-shadow: none; border-radius: 999px; padding: 10px 18px; }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(242, 169, 59, 0.25); }
+.btn-outline { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.btn-outline:hover { border-color: var(--accent-solid); box-shadow: none; }
+.btn:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid var(--accent-solid); outline-offset: 2px; }
+
+.card, .update-card, .stat, .form-card { background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 16px; }
+.badge, .badge-inline { background: rgba(242, 169, 59, 0.12); color: var(--accent-solid); }
+.small, .card p, .section p.lead, .hero-text p { color: var(--muted); }
+.disclaimer { border-left: 3px solid var(--accent-solid); }
+a.card:hover, .art-card:hover { border-color: rgba(242, 169, 59, 0.55) !important; }
+
+/* Light/Dark switch as a pill */
+label.toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--muted); }
+label.toggle input { appearance: none; -webkit-appearance: none; width: 40px; height: 22px; border-radius: 999px; background: var(--line); position: relative; cursor: pointer; transition: background .2s; }
+label.toggle input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--text); transition: transform .2s; }
+label.toggle input:checked { background: var(--accent-solid); }
+label.toggle input:checked::after { transform: translateX(18px); background: #1B1200; }
+
+/* Live market board (homepage hero) */
+.market-board { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 22px; box-shadow: var(--shadow); }
+.market-board h2 { font-size: 18px; margin: 0 0 4px; }
+.market-board .mb-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.mb-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.mb-tile { border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; background: var(--bg-alt); }
+.mb-name { font-size: 13px; color: var(--muted); font-weight: 600; }
+.mb-val { font-family: var(--display); font-size: clamp(20px, 2.6vw, 28px); font-weight: 700; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.mb-chg { font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
+.mb-chg.up { color: var(--up); } .mb-chg.down { color: var(--down); }
+.mb-spark { display: block; width: 100%; height: 34px; margin-top: 8px; }
+.mb-foot { margin-top: 14px; font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.hero-visual { background: none !important; border: 0 !important; box-shadow: none !important; min-height: 0 !important; overflow: visible !important; border-radius: 0 !important; }
+.motion-panel::before, .motion-panel::after { display: none !important; }
+.hero { padding: 72px 0 56px; }
+.hero-text h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.02; }

@@ -70,7 +70,21 @@ class ToolsLink {
 
 class HideUnused {
   element(el) {
+    el.append('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600&display=swap"><link rel="stylesheet" href="/public/css/eic-2026.css">', { html: true });
     el.append('<style>section:has(#pollContainer),section:has(#newsletterForm),#dailyPreview{display:none!important}</style>', { html: true });
+  }
+}
+
+class MarketBoard {
+  element(el) {
+    el.setInnerContent(`<section class="market-board" aria-labelledby="mbTitle"><h2 id="mbTitle">Markets today</h2><p class="mb-sub" id="mbTime">Loading the latest prices…</p><div class="mb-grid" id="mbGrid"></div><p class="mb-foot">Delayed prices for learning only. Gold shown via the GOLDBEES ETF.</p></section>
+<script>
+fetch('/api/indices').then(r=>r.json()).then(d=>{const g=document.getElementById('mbGrid');if(!d.success||!d.items.length){g.innerHTML='<p class="small">Prices are unavailable right now.</p>';document.getElementById('mbTime').textContent='';return;}
+const f=v=>Number(v).toLocaleString('en-IN',{maximumFractionDigits:2});
+g.innerHTML=d.items.map(i=>{const up=i.change>=0,pts=i.spark||[],mn=Math.min(...pts),mx=Math.max(...pts),sp=mx-mn||1;const line=pts.map((v,k)=>(k*100/(pts.length-1)).toFixed(1)+','+(30-(v-mn)*26/sp).toFixed(1)).join(' ');
+return '<div class="mb-tile"><div class="mb-name">'+i.name+'</div><div class="mb-val">'+f(i.price)+'</div><div class="mb-chg '+(up?'up':'down')+'">'+(up?'▲ +':'▼ ')+f(i.change)+' ('+(up?'+':'')+f(i.pct)+'%)</div>'+(pts.length>2?'<svg class="mb-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+line+'" fill="none" stroke="'+(up?'#2FBF71':'#FF6B5E')+'" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>':'')+'</div>';}).join('');
+document.getElementById('mbTime').textContent='Last close: '+d.asOf+' (Indian markets)';}).catch(()=>{});
+</script>`, { html: true });
   }
 }
 
@@ -103,6 +117,28 @@ export default {
         return json(r);
       } catch (e) { return json({ ok: false, error: String(e.message || e) }, 500); }
     }
+    if (url.pathname === '/api/indices' && request.method === 'GET') {
+      const cache = caches.default, key = new Request('https://cache.local/indices');
+      const hit = await cache.match(key);
+      if (hit) return security(hit);
+      const list = [['Nifty 50', '%5ENSEI'], ['Sensex', '%5EBSESN'], ['Bank Nifty', '%5ENSEBANK'], ['Gold (GOLDBEES)', 'GOLDBEES.NS']];
+      const items = []; let asOf = '';
+      for (const [name, sym] of list) {
+        try {
+          const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=1mo&interval=1d`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+          const res = (await r.json())?.chart?.result?.[0];
+          const ts = res.timestamp || [], c = (res.indicators?.quote?.[0]?.close || []);
+          const rows = ts.map((t, i) => [t, c[i]]).filter((x) => x[1] != null);
+          const last = rows[rows.length - 1][1], prev = rows[rows.length - 2][1];
+          asOf = new Date(rows[rows.length - 1][0] * 1000).toISOString().slice(0, 10);
+          items.push({ name, price: Math.round(last * 100) / 100, change: Math.round((last - prev) * 100) / 100, pct: Math.round(((last - prev) / prev) * 10000) / 100, spark: rows.slice(-22).map((x) => Math.round(x[1] * 100) / 100) });
+        } catch (e) {}
+      }
+      const res = json({ success: true, asOf, items });
+      res.headers.set('Cache-Control', 'public, max-age=900');
+      if (items.length) await cache.put(key, res.clone());
+      return security(res);
+    }
     const sm = url.pathname.match(/^\/api\/stock\/([A-Za-z0-9&%-]+)$/);
     if (sm && request.method === 'GET') {
       const sym = decodeURIComponent(sm[1]).toUpperCase();
@@ -128,7 +164,7 @@ export default {
     }
     const type = res.headers.get('content-type') || '';
     if (type.includes('text/html'))
-      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links a[href="/articles"]', new Remove()).on('.nav-links a[href="/tools"]', new Remove()).on('.nav-links', new ToolsLink()).on('head', new HideUnused()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
+      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links a[href="/articles"]', new Remove()).on('.nav-links a[href="/tools"]', new Remove()).on('.nav-links', new ToolsLink()).on('head', new HideUnused()).on('.hero-visual', new MarketBoard()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
     return security(res);
   },
 };
