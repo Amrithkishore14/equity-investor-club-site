@@ -11,7 +11,7 @@
 @keyframes shine { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
 
 /* Ticker tape */
-.eic-ticker { position: sticky; top: 0; z-index: 60; overflow: hidden; border-bottom: 1px solid var(--line); background: rgba(6, 18, 22, .92); backdrop-filter: blur(8px); font-variant-numeric: tabular-nums; }
+.eic-ticker { position: relative; z-index: 5; overflow: hidden; border-bottom: 1px solid var(--line); background: rgba(6, 18, 22, .92); backdrop-filter: blur(8px); font-variant-numeric: tabular-nums; }
 body.light .eic-ticker { background: rgba(255,255,255,.92); }
 .eic-track { display: inline-flex; gap: 34px; white-space: nowrap; padding: 8px 0; animation: tick 60s linear infinite; will-change: transform; }
 .eic-ticker:hover .eic-track { animation-play-state: paused; }
@@ -62,7 +62,7 @@ body.light .fx-hero-card { background: linear-gradient(160deg, #fff, #f3f6f4); }
 /* Scroll progress bar */
 #fxProgress { position: fixed; top: 0; left: 0; height: 3px; width: 100%; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, #F2A93B, #2FBF71); z-index: 100; }
 
-@media (max-width: 640px) { .fx-minis { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .fx-minis { gap: 6px; } .fx-mini { padding: 8px; } .fx-mini .v { font-size: 14px; } }
 @media (prefers-reduced-motion: reduce) {
   .hero::before, .hero-text h1, .eic-track, .fx-dot, .fx-chart .ln, .fx-chart .ar { animation: none !important; }
   .fx-chart .ln { stroke-dashoffset: 0; } .fx-chart .ar { opacity: 1; }
