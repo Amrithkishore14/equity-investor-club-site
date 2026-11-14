@@ -1,0 +1,162 @@
+{
+  "modules": [
+    {
+      "id": "money-basics", "title": "Money basics", "title_ta": "பண அடிப்படைகள்", "level": "Start here",
+      "lessons": [
+        {
+          "slug": "why-invest", "title": "Why invest at all? Inflation explained", "minutes": 4,
+          "body": "Money kept idle slowly loses its power. This is **inflation**: prices of food, rent and travel rise over time.\n\n**Example:** if inflation averages 6% a year, ₹100 today will buy only what about **₹56** buys today after 10 years. Your note still says ₹100, but it buys less.\n\nA savings account paying 3% while prices rise 6% means you are getting poorer each year without noticing. Investing aims to grow money **faster than inflation**, so your future self can afford the same life.\n\n**Key idea:** the real return is your return minus inflation. A 7% return with 6% inflation is only about 1% real growth.",
+          "ta": ["பணவீக்கம் (inflation) காரணமாக பணத்தின் மதிப்பு ஆண்டுதோறும் குறைகிறது.", "6% பணவீக்கத்தில், இன்றைய ₹100 பத்து வருடங்களில் சுமார் ₹56 மதிப்புக்கே பொருட்கள் வாங்கும்.", "முதலீட்டின் நோக்கம்: பணவீக்கத்தை விட அதிக வேகத்தில் பணத்தை வளர்ப்பது."],
+          "quiz": { "q": "Your savings earn 4% a year and inflation is 6%. What is happening to your money's buying power?", "options": ["It grows by 10%", "It grows by 4%", "It shrinks by about 2% a year", "It stays the same"], "answer": 2 },
+          "tool": "/tools"
+        },
+        {
+          "slug": "compounding", "title": "Compounding: the eighth wonder", "minutes": 4,
+          "body": "**Compounding** means your returns start earning returns of their own. Growth snowballs over time.\n\n**Example:** ₹1,00,000 growing at 12% a year becomes about **₹9.6 lakh in 20 years**. Most of that growth happens in the last few years, which is why starting early matters more than starting big.\n\n**Rule of 72:** divide 72 by the yearly return to estimate how many years it takes to double. At 12%, money doubles roughly every **6 years**.\n\n**Key idea:** time in the market is your biggest advantage. Interrupting compounding (selling in panic, withdrawing early) is very costly.",
+          "ta": ["கூட்டு வட்டி (compounding): உங்கள் லாபமும் லாபம் சம்பாதிக்கிறது.", "₹1 லட்சம் 12% வளர்ச்சியில் 20 ஆண்டுகளில் சுமார் ₹9.6 லட்சமாகிறது.", "72 விதி: 72-ஐ வருடாந்திர வருமானத்தால் வகுத்தால், பணம் இரட்டிப்பாகும் ஆண்டுகள் கிடைக்கும்."],
+          "quiz": { "q": "Using the Rule of 72, roughly how long does money take to double at 9% a year?", "options": ["4 years", "8 years", "12 years", "20 years"], "answer": 1 },
+          "tool": "/lumpsum-calculator"
+        },
+        {
+          "slug": "emergency-fund", "title": "Emergency fund before investing", "minutes": 3,
+          "body": "Before you buy a single share, keep an **emergency fund**: money for job loss, medical bills or urgent repairs.\n\nA common guideline is **3 to 6 months of essential expenses**, kept somewhere safe and easy to withdraw, such as a savings account, a sweep-in FD or a liquid fund.\n\nWhy it matters: without it, an emergency can force you to sell investments at a bad time, often when markets are falling.\n\n**Key idea:** invest only money you will not need for at least 3 to 5 years.",
+          "ta": ["முதலீடுக்கு முன் அவசர நிதி (emergency fund) அவசியம்.", "குறைந்தது 3 முதல் 6 மாத அத்தியாவசிய செலவுகளை பாதுகாப்பான இடத்தில் வைத்திருங்கள்.", "3–5 ஆண்டுகள் தேவைப்படாத பணத்தை மட்டுமே பங்குகளில் முதலீடு செய்யுங்கள்."],
+          "quiz": { "q": "Where is an emergency fund usually best kept?", "options": ["In small-cap stocks", "In crypto", "In a safe, easy-to-withdraw place like a savings account or liquid fund", "In real estate"], "answer": 2 }
+        },
+        {
+          "slug": "risk-and-return", "title": "Risk and return go together", "minutes": 4,
+          "body": "Higher possible returns always come with higher risk. There is no safe investment that gives very high returns. Anyone promising that is a red flag.\n\n**Roughly, from lower to higher risk:** savings account and FDs → government bonds → debt funds → large-company shares → mid and small-company shares.\n\n**Diversification** means spreading money across many companies, sectors and asset types, so one bad event does not sink everything.\n\n**Key idea:** match the risk to your goal's timeline. Money needed in 1 year should not be in shares; money for 15 years away can handle ups and downs.",
+          "ta": ["அதிக வருமானம் என்றால் அதிக ஆபத்தும் உண்டு.", "'உத்தரவாத அதிக லாபம்' என்ற வாக்குறுதி ஒரு எச்சரிக்கை அறிகுறி.", "பல நிறுவனங்கள், துறைகளில் பணத்தைப் பிரிப்பது (diversification) ஆபத்தைக் குறைக்கும்."],
+          "quiz": { "q": "Someone offers a 'guaranteed 5% per month' return. What should you think?", "options": ["Great deal, invest quickly", "It's a red flag for a scam", "That's normal for shares", "Only invest half"], "answer": 1 },
+          "tool": "/risk-quiz"
+        }
+      ]
+    },
+    {
+      "id": "stock-market", "title": "How the stock market works", "title_ta": "பங்குச் சந்தை எப்படி செயல்படுகிறது", "level": "Beginner",
+      "lessons": [
+        {
+          "slug": "what-is-a-share", "title": "What is a share? NSE, BSE and SEBI", "minutes": 4,
+          "body": "A **share** is a small piece of ownership in a company. If the company grows its profits, the value of your share can grow, and you may receive **dividends**.\n\nIn India, shares trade on two exchanges: the **NSE** (National Stock Exchange) and the **BSE** (Bombay Stock Exchange). **SEBI** is the regulator that protects investors.\n\nTo invest you need a **demat account** (holds your shares electronically, at NSDL or CDSL) and a **trading account** with a broker. Indian trades now settle on **T+1**, one working day after you buy.\n\n**Key idea:** when you buy a share, you are buying part of a business, not a lottery ticket.",
+          "ta": ["பங்கு (share) என்பது ஒரு நிறுவனத்தின் சிறிய உரிமைப் பகுதி.", "இந்தியாவில் NSE, BSE ஆகிய இரண்டு பங்குச் சந்தைகள்; SEBI ஒழுங்குமுறை அமைப்பு.", "முதலீடு செய்ய demat கணக்கும் trading கணக்கும் தேவை."],
+          "quiz": { "q": "Which organisation regulates India's securities market?", "options": ["RBI", "SEBI", "NSE", "Income Tax Department"], "answer": 1 }
+        },
+        {
+          "slug": "nifty-sensex", "title": "Nifty and Sensex: what the indices mean", "minutes": 3,
+          "body": "An **index** tracks a group of shares to show how the market is doing overall.\n\n- **Nifty 50:** 50 large companies listed on the NSE.\n- **Sensex:** 30 large companies listed on the BSE.\n- **Bank Nifty:** the major banking shares.\n\nWhen news says \"Nifty fell 1%\", it means those 50 companies, weighted by size, fell about 1% on average.\n\n**Key idea:** indices are a scoreboard. Watching them daily is optional; long-term investors care about the trend over years.",
+          "ta": ["Index என்பது பல பங்குகளின் மொத்த நிலையைக் காட்டும் அளவுகோல்.", "Nifty 50: NSE-யின் 50 பெரிய நிறுவனங்கள்; Sensex: BSE-யின் 30 பெரிய நிறுவனங்கள்.", "நீண்டகால முதலீட்டாளர்களுக்கு தினசரி ஏற்ற இறக்கம் முக்கியமல்ல."],
+          "quiz": { "q": "How many companies are in the Sensex?", "options": ["10", "30", "50", "100"], "answer": 1 }
+        },
+        {
+          "slug": "why-prices-move", "title": "Why share prices move", "minutes": 4,
+          "body": "In the short term, prices move with **news, emotions and money flows**: results, interest rates, global events, rumours.\n\nIn the long term, prices tend to follow **business performance**: growing profits and cash flows.\n\nThe investor Benjamin Graham described the market as a **voting machine in the short run and a weighing machine in the long run**.\n\n**Key idea:** a falling price is not always bad news about the business, and a rising price is not always good news. Look at what the business is doing.",
+          "ta": ["குறுகிய காலத்தில் செய்திகள், உணர்வுகள் விலையை நகர்த்துகின்றன.", "நீண்ட காலத்தில் விலை நிறுவனத்தின் லாப வளர்ச்சியைப் பின்தொடர்கிறது.", "விலை வீழ்ச்சி எப்போதும் வணிகம் மோசம் என்று அர்த்தமல்ல."],
+          "quiz": { "q": "Over many years, what tends to drive a company's share price most?", "options": ["Daily news headlines", "Its business profits and cash flows", "Social media buzz", "The day of the week"], "answer": 1 }
+        },
+        {
+          "slug": "dividends-bonus-splits", "title": "Dividends, bonus issues and splits", "minutes": 3,
+          "body": "- **Dividend:** a share of profit paid out in cash. Dividend yield = yearly dividend ÷ share price.\n- **Bonus issue:** free extra shares (e.g. 1:1). You hold more shares, but the price adjusts down, so your total value is unchanged.\n- **Stock split:** one share becomes several smaller ones (e.g. ₹10 face value into ₹2). Again, total value does not change.\n\n**Key idea:** bonuses and splits change the number of shares, not the value of the business. Don't buy just because of them.",
+          "ta": ["Dividend: லாபத்தில் ஒரு பகுதி பணமாக வழங்கப்படுகிறது.", "Bonus, split: பங்குகளின் எண்ணிக்கை கூடும், ஆனால் மொத்த மதிப்பு மாறாது.", "Bonus/split அறிவிப்புக்காக மட்டும் பங்கு வாங்க வேண்டாம்."],
+          "quiz": { "q": "After a 1:1 bonus issue, what happens to your total investment value (on day one)?", "options": ["It doubles", "It halves", "It stays about the same", "It becomes zero"], "answer": 2 }
+        }
+      ]
+    },
+    {
+      "id": "mutual-funds", "title": "Mutual funds and SIPs", "title_ta": "மியூச்சுவல் ஃபண்ட் & SIP", "level": "Beginner",
+      "lessons": [
+        {
+          "slug": "mutual-funds", "title": "Mutual funds in plain words", "minutes": 4,
+          "body": "A **mutual fund** pools money from many investors and a professional manager invests it in shares, bonds or both. You own **units**; the price of a unit is the **NAV**.\n\nTypes you will hear about: **equity funds** (shares), **debt funds** (bonds), **hybrid funds** (both), and by company size, **large, mid and small cap**.\n\nBenefits: instant diversification and professional management, even with ₹500.\n\n**Key idea:** read the scheme's objective and risk level (the \"riskometer\") before investing.",
+          "ta": ["Mutual fund பலரின் பணத்தை ஒன்றாகச் சேர்த்து நிபுணர் முதலீடு செய்கிறார்.", "ஒரு யூனிட்டின் விலை NAV எனப்படும்.", "முதலீடு செய்வதற்கு முன் ஃபண்டின் நோக்கம், ஆபத்து நிலையைப் படியுங்கள்."],
+          "quiz": { "q": "What is NAV in a mutual fund?", "options": ["The fund manager's salary", "The price of one unit of the fund", "A type of tax", "The minimum SIP amount"], "answer": 1 }
+        },
+        {
+          "slug": "sip-rupee-cost-averaging", "title": "SIP and rupee-cost averaging", "minutes": 4,
+          "body": "A **SIP** invests a fixed amount every month automatically. When prices are low you buy more units; when high, fewer. This is **rupee-cost averaging**, and it removes the stress of timing the market.\n\n**Example:** ₹5,000 a month for 20 years, assuming 12% a year, could grow to about **₹50 lakh**, from ₹12 lakh invested.\n\n**Key idea:** the habit matters more than the amount. Start small, increase your SIP when your income rises (a \"step-up\").",
+          "ta": ["SIP: மாதம் ஒரு நிலையான தொகையை தானாக முதலீடு செய்வது.", "விலை குறைந்தால் அதிக யூனிட்கள், உயர்ந்தால் குறைவான யூனிட்கள் கிடைக்கும்.", "₹5,000 மாதம் 20 ஆண்டுகள் (12% எனக் கொண்டால்) சுமார் ₹50 லட்சமாகலாம்."],
+          "quiz": { "q": "What does rupee-cost averaging mean?", "options": ["Always buying at the lowest price", "Buying more units when prices are low and fewer when high, by investing a fixed amount regularly", "Investing only when markets fall", "Avoiding equity funds"], "answer": 1 },
+          "tool": "/sip-calculator"
+        },
+        {
+          "slug": "index-funds-etfs", "title": "Index funds and ETFs", "minutes": 3,
+          "body": "An **index fund** simply copies an index like the Nifty 50, instead of a manager picking shares. An **ETF** does the same but trades on the exchange like a share (for example, gold ETFs like GOLDBEES).\n\nBecause there is little active management, costs are usually **much lower**.\n\n**Key idea:** many beginners start with a low-cost Nifty 50 index fund, as it gives them a slice of India's largest companies in one go.",
+          "ta": ["Index fund ஒரு index-ஐ (எ.கா. Nifty 50) அப்படியே பின்தொடர்கிறது.", "ETF பங்கு போல சந்தையில் வாங்கி விற்கலாம்.", "செலவு (expense ratio) பொதுவாக மிகக் குறைவு."],
+          "quiz": { "q": "Why are index funds usually cheaper than actively managed funds?", "options": ["They are not regulated", "They simply copy an index, so there is less management work", "They only buy small companies", "They never fall in value"], "answer": 1 }
+        },
+        {
+          "slug": "expense-ratio", "title": "Expense ratio and direct vs regular plans", "minutes": 4,
+          "body": "The **expense ratio** is the yearly fee a fund charges, taken from your returns. Small differences grow huge over time.\n\n**Example:** ₹10 lakh for 20 years, earning 11% after a 1% fee, becomes about ₹80.6 lakh. With a 0.3% fee (11.7% net) it becomes about ₹91.4 lakh: **₹10.8 lakh more**, just from lower fees.\n\n**Direct plans** have no distributor commission, so their expense ratio is lower than **regular plans** of the same fund.\n\n**Key idea:** costs are one of the few things you fully control.",
+          "ta": ["Expense ratio: ஃபண்ட் வசூலிக்கும் வருடாந்திர கட்டணம்.", "0.7% வித்தியாசம் கூட 20 ஆண்டுகளில் லட்சக்கணக்கில் மாறும்.", "Direct plan-களில் கட்டணம் Regular plan-ஐ விட குறைவு."],
+          "quiz": { "q": "Which usually has a lower expense ratio?", "options": ["The regular plan", "The direct plan", "They are always equal", "Whichever has the higher NAV"], "answer": 1 }
+        }
+      ]
+    },
+    {
+      "id": "reading-a-company", "title": "Reading a company", "title_ta": "ஒரு நிறுவனத்தைப் புரிந்துகொள்வது", "level": "Intermediate",
+      "lessons": [
+        {
+          "slug": "revenue-profit-margin", "title": "Revenue, profit and margins", "minutes": 4,
+          "body": "- **Revenue (sales):** money the company earns from customers.\n- **Net profit:** what remains after all costs, interest and tax.\n- **Profit margin:** profit ÷ revenue.\n\n**Example:** revenue ₹1,000 crore and profit ₹150 crore means a **15% margin**.\n\nLook at the **trend over several years**: steadily growing revenue and stable or rising margins are healthy signs. One great quarter proves little.\n\n**Key idea:** quarterly results are on the company's website and on NSE/BSE, free to read.",
+          "ta": ["Revenue: வாடிக்கையாளர்களிடமிருந்து வரும் வருமானம்; Net profit: எல்லா செலவுகளுக்கும் பிறகு மீதம்.", "Margin = லாபம் ÷ வருமானம் (எ.கா. 150/1000 = 15%).", "ஒரு காலாண்டு அல்ல, பல ஆண்டு போக்கைப் பாருங்கள்."],
+          "quiz": { "q": "A company has revenue of ₹500 crore and net profit of ₹50 crore. What is its net margin?", "options": ["5%", "10%", "50%", "100%"], "answer": 1 }
+        },
+        {
+          "slug": "pe-ratio", "title": "P/E ratio and valuation", "minutes": 4,
+          "body": "The **P/E ratio** = share price ÷ earnings per share (EPS). It tells you how many rupees investors pay for each rupee of yearly profit.\n\n**Example:** price ₹500, EPS ₹25 → P/E of **20**.\n\nA high P/E can mean investors expect fast growth, or that the share is expensive. A low P/E can mean it's cheap, or that the business has problems. **Compare with the company's own history and with similar companies**, not across unrelated sectors.\n\n**Key idea:** a great company bought at too high a price can still be a poor investment.",
+          "ta": ["P/E = பங்கு விலை ÷ ஒரு பங்கின் வருமானம் (EPS).", "விலை ₹500, EPS ₹25 என்றால் P/E = 20.", "அதே துறையில் உள்ள நிறுவனங்களுடன் ஒப்பிட்டுப் பாருங்கள்."],
+          "quiz": { "q": "A share costs ₹300 and its EPS is ₹15. What is its P/E?", "options": ["15", "20", "45", "4,500"], "answer": 1 }
+        },
+        {
+          "slug": "debt-balance-sheet", "title": "Debt and the balance sheet", "minutes": 4,
+          "body": "The **balance sheet** shows what a company owns (assets) and owes (liabilities). The difference is **shareholders' equity**.\n\n**Debt-to-equity** = total debt ÷ equity. Debt ₹400 crore and equity ₹1,000 crore → **0.4**.\n\nSome debt is normal, especially for banks, power and infrastructure companies. But very high debt makes a company fragile when interest rates rise or business slows.\n\n**Key idea:** companies that can fund growth from their own cash are usually safer than those that keep borrowing.",
+          "ta": ["Balance sheet: சொத்துகள் (assets) மற்றும் கடன்கள் (liabilities).", "Debt-to-equity = கடன் ÷ பங்குதாரர் மூலதனம்.", "அதிக கடன் உள்ள நிறுவனங்கள் கடினமான காலங்களில் பாதிக்கப்படலாம்."],
+          "quiz": { "q": "Debt is ₹200 crore and equity is ₹800 crore. What is debt-to-equity?", "options": ["0.25", "0.5", "4", "1,000"], "answer": 0 }
+        },
+        {
+          "slug": "moat", "title": "Moats: what makes a business last", "minutes": 4,
+          "body": "Warren Buffett popularised the idea of an **economic moat**: a lasting advantage that protects a business from competitors, like a moat around a castle.\n\nCommon moats: **strong brands** (customers pay more for them), **low cost** (can sell cheaper and still profit), **network effects** (more users make it more valuable), **switching costs** (hard for customers to leave), and **licences or scale**.\n\n**Key idea:** ask, \"Why will this company still be earning well in 10 years?\" If you can't answer, be careful.",
+          "ta": ["Moat: போட்டியாளர்களிடமிருந்து நிறுவனத்தைப் பாதுகாக்கும் நீடித்த நன்மை.", "வலுவான பிராண்ட், குறைந்த செலவு, network effect, மாறுவதில் சிரமம் போன்றவை moat-கள்.", "'10 ஆண்டுகளுக்குப் பிறகும் இந்த நிறுவனம் ஏன் நன்றாக இருக்கும்?' என்று கேளுங்கள்."],
+          "quiz": { "q": "Which is an example of an economic moat?", "options": ["A one-time big order", "A strong brand customers keep paying more for", "A share price rising fast", "A new CEO"], "answer": 1 },
+          "tool": "/holdings"
+        }
+      ]
+    },
+    {
+      "id": "investor-mindset", "title": "The investor's mindset", "title_ta": "முதலீட்டாளர் மனநிலை", "level": "Most important",
+      "lessons": [
+        {
+          "slug": "mr-market", "title": "Mr. Market: don't let moods move you", "minutes": 4,
+          "body": "In *The Intelligent Investor*, Benjamin Graham imagines a business partner called **Mr. Market** who every day offers to buy or sell shares at a price. Some days he is euphoric and asks too much; other days he is gloomy and sells too cheap.\n\nYou don't have to trade with him. His mood is an **opportunity, not an instruction**.\n\n**Key idea:** when markets fall sharply, ask whether the businesses changed, or only the mood.",
+          "ta": ["Benjamin Graham-இன் 'Mr. Market' உவமை: சந்தையின் மனநிலை தினமும் மாறுகிறது.", "அவர் சொல்லும் விலைக்கு நீங்கள் வாங்கவோ விற்கவோ கட்டாயமில்லை.", "சந்தை வீழ்ச்சியில்: வணிகம் மாறியதா, அல்லது மனநிலை மட்டும் மாறியதா?"],
+          "quiz": { "q": "According to the Mr. Market idea, how should you treat a sudden market crash?", "options": ["Sell everything immediately", "As information about mood, and check whether the businesses actually changed", "Borrow money to buy", "Stop investing forever"], "answer": 1 }
+        },
+        {
+          "slug": "margin-of-safety", "title": "Margin of safety", "minutes": 3,
+          "body": "Graham's central idea: buy only when the price is **well below** your honest estimate of what the business is worth. The gap is your **margin of safety**.\n\nIt protects you from your own mistakes, because your estimate will sometimes be wrong.\n\nFor everyday investors, margin of safety also means: an emergency fund, no borrowed money for investing, and diversification.\n\n**Key idea:** the goal is first to avoid big losses; growth follows.",
+          "ta": ["Margin of safety: மதிப்பை விட நன்றாக குறைந்த விலையில் வாங்குவது.", "இது நம் தவறுகளிலிருந்து பாதுகாக்கும்.", "கடன் வாங்கி முதலீடு செய்யாமல் இருப்பதும் ஒரு பாதுகாப்பு."],
+          "quiz": { "q": "Why does a margin of safety help?", "options": ["It guarantees profits", "It protects you when your estimate of value turns out wrong", "It lets you trade more often", "It avoids tax"], "answer": 1 }
+        },
+        {
+          "slug": "psychology-of-money", "title": "Behaviour beats brilliance", "minutes": 4,
+          "body": "Morgan Housel's *The Psychology of Money* argues that **how you behave** with money matters more than how smart you are.\n\n- **Fear and greed** make people buy high and sell low.\n- **\"Enough\"**: knowing when you have enough stops you taking risks you don't need.\n- **Room for error**: plan so that bad luck does not wipe you out.\n- **Reasonable beats rational**: a plan you can stick to beats a perfect plan you abandon.\n\n**Key idea:** the hardest part of investing is staying calm when everyone else isn't.",
+          "ta": ["பணத்தில் அறிவை விட நடத்தையே முக்கியம்.", "பயமும் பேராசையும் உயர்ந்த விலையில் வாங்கி, குறைந்த விலையில் விற்க வைக்கின்றன.", "நீங்கள் தொடர்ந்து பின்பற்றக்கூடிய எளிய திட்டமே சிறந்தது."],
+          "quiz": { "q": "Which habit most often hurts investors' returns?", "options": ["Investing regularly", "Panic selling when markets fall", "Keeping an emergency fund", "Reading annual reports"], "answer": 1 }
+        },
+        {
+          "slug": "habits-and-automation", "title": "Small habits, automatic wealth", "minutes": 3,
+          "body": "James Clear's *Atomic Habits* shows that small actions repeated consistently create big results, the same maths as compounding.\n\nApply it to money:\n- **Make it automatic:** set your SIP for the day after salary arrives.\n- **Make it easy:** start with an amount that doesn't hurt, even ₹500.\n- **Make it visible:** track your net worth once a month, not your portfolio every hour.\n- **Step up** your SIP by 10% every year.\n\n**Key idea:** consistency for 20 years beats brilliance for 2.",
+          "ta": ["சிறிய பழக்கங்கள் தொடர்ந்தால் பெரிய முடிவுகள் வரும்.", "சம்பளம் வந்த மறுநாள் SIP தானாக செல்லும்படி அமைக்கவும்.", "ஒவ்வொரு ஆண்டும் SIP-ஐ 10% உயர்த்துங்கள்."],
+          "quiz": { "q": "What's the best way to make investing a habit?", "options": ["Wait for the perfect market moment", "Automate a SIP right after payday", "Check prices every hour", "Invest only bonuses"], "answer": 1 },
+          "tool": "/sip-calculator"
+        },
+        {
+          "slug": "assets-vs-liabilities", "title": "Assets vs liabilities", "minutes": 3,
+          "body": "Robert Kiyosaki's *Rich Dad Poor Dad* popularised a simple test: an **asset** puts money into your pocket; a **liability** takes money out.\n\nShares that pay dividends, a fund that grows, or skills that raise your income are assets. A car loan for a car you can't afford, or EMIs on gadgets, drain cash every month.\n\n**Key idea:** before a big purchase, ask whether it builds your future or only your present. Use the EMI calculator to see what a loan really costs.",
+          "ta": ["Asset உங்களுக்கு பணம் தரும்; Liability உங்களிடமிருந்து பணம் எடுக்கும்.", "வருமானம் தரும் பங்குகள், திறன்கள் assets; தேவையற்ற EMI-கள் liabilities.", "பெரிய செலவுக்கு முன், இது எதிர்காலத்தை உருவாக்குகிறதா என்று யோசியுங்கள்."],
+          "quiz": { "q": "Which is an asset in the Rich Dad Poor Dad sense?", "options": ["An expensive phone on EMI", "A dividend-paying investment", "A holiday on a credit card", "A car loan"], "answer": 1 },
+          "tool": "/emi-calculator"
+        }
+      ]
+    }
+  ]
+}

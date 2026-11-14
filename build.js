@@ -185,6 +185,55 @@ page('disclaimer', 'Disclaimer', `<h1>Disclaimer</h1>
   <h2>Your responsibility</h2>
   <p>You are solely responsible for your own investment decisions. Equity Investor Club and its founder accept no liability for any loss arising from the use of this website.</p>`, 'Equity Investor Club is not a SEBI-registered adviser. All content is for education only. Read our full disclaimer and holdings disclosure.');
 
+// ---- Learn: a free course built from content/learn.json ----
+const course = (() => { try { return JSON.parse(fs.readFileSync('content/learn.json', 'utf8')); } catch (e) { return { modules: [] }; } })();
+const flat = course.modules.flatMap((m) => m.lessons.map((l) => ({ ...l, module: m })));
+const totalMin = flat.reduce((a, l) => a + (l.minutes || 3), 0);
+const LCSS = `<style>
+.lp-hero{display:grid;gap:14px;margin-bottom:28px}.lp-bar{height:10px;border-radius:999px;background:var(--line,rgba(255,255,255,.1));overflow:hidden}.lp-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#F2A93B,#FFD58A);transition:width .6s}
+.lp-mod{margin:34px 0 0}.lp-mod h2{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}.lp-lvl{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(242,169,59,.14);color:#F2A93B}
+.lp-ta{font-size:15px;color:var(--muted);font-weight:500}.lp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:14px}
+.lp-item{display:flex;gap:12px;align-items:flex-start;padding:16px;text-decoration:none;color:inherit}.lp-num{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;border:1px solid var(--line,rgba(255,255,255,.15))}
+.lp-item.done .lp-num{background:#22C55E;border-color:#22C55E;color:#06140b}.lp-item h3{font-size:16px;margin:0 0 4px;line-height:1.3}
+.ls-ta{border-left:3px solid #F2A93B;padding:14px 16px;margin-top:18px}.ls-ta ul{margin:8px 0 0 18px;list-style:disc}.ls-ta li{margin:6px 0;font-family:'Noto Sans Tamil',sans-serif}
+.ls-nav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:22px}
+</style>`;
+const learnHtml = header.replace('__TITLE__', 'Free investing course').replace('__DESC__', `A free, step-by-step investing course for beginners in India: ${flat.length} short lessons in English with Tamil key points, quizzes and calculators.`).replace(/<a href="\/articles" class="active">Articles<\/a>/, '<a href="/articles">Articles</a>')
+  .replace('</head>', `<link rel="canonical" href="/learn" /><meta property="og:title" content="Free investing course | Equity Investor Club" /><meta property="og:image" content="/images/logo.jpg" /></head>`) + `<main class="container section">${LCSS}
+  <div class="lp-hero"><span class="badge" style="justify-self:start">Free course · ${flat.length} lessons · about ${totalMin} minutes</span>
+  <h1>Learn investing, one small step at a time</h1>
+  <p class="lead">From "why invest?" to reading a company and keeping a calm mind. Each lesson takes a few minutes, has Tamil key points (தமிழ்), a quick quiz and a calculator to try.</p>
+  <div><div class="lp-bar" aria-hidden="true"><i id="lpBar"></i></div><p class="small" id="lpText" style="margin-top:6px">Your progress is saved on this device only.</p></div>
+  <p><a class="btn" id="lpGo" href="/learn/${flat[0] ? flat[0].slug : ''}/">Start the course</a></p></div>
+  ${course.modules.map((m, mi) => `<section class="lp-mod"><h2>${mi + 1}. ${esc(m.title)} <span class="lp-lvl">${esc(m.level)}</span> <span class="lp-ta">${esc(m.title_ta)}</span></h2>
+    <div class="lp-list">${m.lessons.map((l) => { const n = flat.findIndex((x) => x.slug === l.slug) + 1; return `<a class="card lp-item" data-slug="${l.slug}" href="/learn/${l.slug}/"><span class="lp-num">${n}</span><span><h3>${esc(l.title)}</h3><span class="small">${l.minutes || 3} min read</span></span></a>`; }).join('')}</div></section>`).join('')}
+  <div class="disclaimer" style="margin-top:28px;">Education only, not investment advice. Equity Investor Club is not registered with SEBI as an Investment Adviser or Research Analyst. Book ideas are summarised in our own words; read the original books for the full picture. <a href="/disclaimer">Full disclaimer</a>.</div>
+</main>
+<script>(function(){let d={};try{d=JSON.parse(localStorage.getItem('eic-learn')||'{}')}catch(e){}const all=${JSON.stringify(flat.map((l) => l.slug))};const done=all.filter(s=>d[s]).length;
+document.querySelectorAll('.lp-item').forEach(a=>{if(d[a.dataset.slug])a.classList.add('done')});document.getElementById('lpBar').style.width=(done*100/all.length)+'%';
+if(done){document.getElementById('lpText').textContent=done+' of '+all.length+' lessons complete. Progress is saved on this device only.';const next=all.find(s=>!d[s]);const g=document.getElementById('lpGo');if(next){g.href='/learn/'+next+'/';g.textContent='Continue the course';}else{g.textContent='Course complete! Review any lesson';}}})();</script>
+` + footer;
+fs.writeFileSync(path.join(OUT, 'learn.html'), learnHtml);
+flat.forEach((l, i) => {
+  const prev = flat[i - 1], next = flat[i + 1];
+  const q = l.quiz;
+  const quizHtml = q ? `<section class="section" style="padding-top:28px"><h2>Quick check</h2><div class="card quiz" data-answer="${q.answer}"><h3 style="margin-bottom:8px;">${esc(q.q)}</h3>${q.options.map((o, k) => `<button class="btn btn-outline quiz-opt" data-k="${k}" style="display:block;width:100%;text-align:left;margin:6px 0;">${esc(o)}</button>`).join('')}<p class="small quiz-msg"></p></div></section>` : '';
+  const body = `${LCSS}<p class="small"><a href="/learn">Course</a> › ${esc(l.module.title)} · Lesson ${i + 1} of ${flat.length} · ${l.minutes || 3} min</p>
+    <h1 style="margin:10px 0 16px;">${esc(l.title)}</h1>
+    <div class="update-card">${marked.parse(l.body)}</div>
+    ${(l.ta || []).length ? `<div class="card ls-ta" lang="ta"><strong>தமிழில் முக்கிய குறிப்புகள்</strong><ul>${l.ta.map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}
+    ${l.tool ? `<p style="margin-top:16px;"><a class="btn btn-outline" href="${l.tool}">Try it with real numbers →</a></p>` : ''}
+    ${quizHtml}
+    <div class="ls-nav">${prev ? `<a class="btn btn-outline" href="/learn/${prev.slug}/">← ${esc(prev.title)}</a>` : '<span></span>'}<button class="btn" id="lsDone">${next ? 'Mark complete & next lesson' : 'Finish the course'}</button></div>
+    <div class="disclaimer" style="margin-top:22px;">Education only, not investment advice. <a href="/disclaimer">Disclaimer</a>.</div>
+    <script>
+    document.querySelectorAll('.quiz').forEach(card=>card.querySelectorAll('.quiz-opt').forEach(o=>o.addEventListener('click',()=>{const r=Number(card.dataset.answer),k=Number(o.dataset.k);card.querySelectorAll('.quiz-opt').forEach(x=>{x.disabled=true;if(Number(x.dataset.k)===r)x.style.borderColor='#22C55E';});if(k!==r)o.style.borderColor='#EF4444';card.querySelector('.quiz-msg').textContent=k===r?'Correct!':'Not quite. The right answer is highlighted in green.';})));
+    document.getElementById('lsDone').addEventListener('click',()=>{let d={};try{d=JSON.parse(localStorage.getItem('eic-learn')||'{}')}catch(e){}d[${JSON.stringify(l.slug)}]=1;try{localStorage.setItem('eic-learn',JSON.stringify(d))}catch(e){}location.href=${JSON.stringify(next ? `/learn/${next.slug}/` : '/learn')};});
+    </script>`;
+  page(`learn/${l.slug}`, l.title, body, `${l.title}: a ${l.minutes || 3}-minute beginner lesson with Tamil key points and a quiz. Free investing course by Equity Investor Club.`);
+});
+
+{ const smp = path.join(OUT, 'sitemap.xml'); if (fs.existsSync(smp)) { const sm = fs.readFileSync(smp, 'utf8'); fs.writeFileSync(smp, sm.replace('</urlset>', flat.map((l) => `  <url><loc>https://equityinvestorclub.com/learn/${l.slug}/</loc></url>`).join('\n') + '\n</urlset>')); } }
 const takeaways = (body) => { const m = body.split(/^##\s+Key takeaways.*$/im)[1]; return m ? m.split(/^##\s/m)[0].split('\n').filter((l) => /^\s*[-*]\s/.test(l)).map((l) => l.replace(/^\s*[-*]\s+/, '').replace(/\*\*/g, '').trim()).slice(0, 4) : []; };
 fs.writeFileSync('worker/posts.json', JSON.stringify(posts.map((p) => ({ id: p.slug, title: p.data.title, slug: p.slug, excerpt: p.excerpt, publish_at: p.data.date || null,
   cover: p.data.cover || '', category: p.data.category || '', tip: p.data.tip || '', takeaways: takeaways(p.body), quiz: Array.isArray(p.data.quiz) ? p.data.quiz.slice(0, 1) : [] }))));
