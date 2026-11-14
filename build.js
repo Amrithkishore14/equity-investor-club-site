@@ -4,6 +4,12 @@ const path = require('path');
 const { marked } = require('marked');
 const yaml = require('js-yaml');
 const sharp = require('sharp');
+// Escape any raw HTML inside markdown, and only allow safe link targets.
+marked.use({ renderer: {
+  html(t) { const x = typeof t === 'string' ? t : t.text; return String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
+  link(tok) { const href = String(tok.href || ''); const text = this.parser.parseInline(tok.tokens); return /^(https?:|\/|#|mailto:)/i.test(href) ? `<a href="${href.replace(/"/g, '&quot;')}"${/^https?:/i.test(href) ? ' target="_blank" rel="noopener nofollow"' : ''}>${text}</a>` : text; },
+  image(tok) { const href = String(tok.href || ''); return /^(https:|\/)/i.test(href) ? `<img src="${href.replace(/"/g, '&quot;')}" alt="${String(tok.text || '').replace(/"/g, '&quot;')}" loading="lazy">` : ''; },
+} });
 
 const SITE = 'site', OUT = 'dist', POSTS = 'content/articles';
 fs.rmSync(OUT, { recursive: true, force: true });
@@ -153,7 +159,7 @@ for (const h of stocks) {
       row('Market cap',f.market_cap_cr==null?'–':'₹'+n(f.market_cap_cr)+' cr')+row('P/E ratio',n(f.pe))+row('P/B ratio',n(f.pb))+row('Return on equity (ROE)',n(f.roe_pct,'%'))+row('Return on capital (ROCE)',n(f.roce_pct,'%'))+row('Debt to equity',n(f.debt_to_equity))+row('Dividend yield',n(f.dividend_yield_pct,'%'))+row('Revenue growth (YoY, latest quarter)',n(f.revenue_growth_yoy_pct,'%'))+row('Profit growth (YoY, latest quarter)',n(f.profit_growth_yoy_pct,'%'))+'</table>'+
       (f.latest_results?'<h3>Latest results</h3><p>'+e(f.latest_results)+'</p>':'')+
       ((f.strengths||[]).length?'<h3>Strengths</h3><ul>'+f.strengths.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul>':'')+((f.risks||[]).length?'<h3>Risks</h3><ul>'+f.risks.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul>':'')+
-      '<p class="small">Compiled with AI from public sources on '+e(f.compiled)+(f.as_of?' (data as of '+e(f.as_of)+')':'')+'. Figures can be wrong or out of date; check the company\\'s filings on NSE before relying on them.'+((f.sources||[]).length?' Sources: '+f.sources.map(s=>'<a href="'+e(s.uri)+'" target="_blank" rel="noopener nofollow">'+e(s.title||'link')+'</a>').join(', '):'')+'</p>';
+      '<p class="small">Compiled with AI from public sources on '+e(f.compiled)+(f.as_of?' (data as of '+e(f.as_of)+')':'')+'. Figures can be wrong or out of date; check the company\\'s filings on NSE before relying on them.'+((f.sources||[]).length?' Sources: '+f.sources.filter(s=>/^https:\\/\\//.test(s.uri||'')).map(s=>'<a href="'+e(s.uri)+'" target="_blank" rel="noopener nofollow">'+e(s.title||'link')+'</a>').join(', '):'')+'</p>';
     }).catch(()=>{document.getElementById('fundamental').innerHTML='<p>Fundamentals are unavailable right now.</p>';});
     fetch('/api/stock/'+encodeURIComponent(SYM)).then(r=>r.json()).then(j=>{const box=document.getElementById('technical');
       if(!j.success){box.innerHTML='<p>'+e(j.message||'Technical data is unavailable right now.')+'</p>';return;}const t=j.data;

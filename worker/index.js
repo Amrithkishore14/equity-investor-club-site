@@ -24,6 +24,8 @@ function security(res) {
   h.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   if ((h.get('content-type') || '').includes('text/html') && !h.has('Content-Security-Policy'))
     h.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.github.com https://*.githubusercontent.com https://unpkg.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'");
+  h.set('Cross-Origin-Opener-Policy', 'same-origin');
+  h.set('X-Permitted-Cross-Domain-Policies', 'none');
   h.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
   return r;
 }
@@ -136,7 +138,12 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/api/robot/run' && request.method === 'POST') {
-      if (!env.RUN_KEY || request.headers.get('X-Run-Key') !== env.RUN_KEY) return json({ ok: false }, 403);
+      const ip = request.headers.get('CF-Connecting-IP') || 'x';
+      if (env.RL_ADMIN) { const { success } = await env.RL_ADMIN.limit({ key: ip }); if (!success) return json({ ok: false }, 429); }
+      const given = request.headers.get('X-Run-Key') || '';
+      const a = new TextEncoder().encode(given), b = new TextEncoder().encode(env.RUN_KEY || '');
+      let diff = a.length ^ b.length; for (let i = 0; i < Math.max(a.length, b.length); i++) diff |= (a[i] || 0) ^ (b[i] || 0);
+      if (!env.RUN_KEY || diff !== 0) return json({ ok: false }, 403);
       try {
         const task = url.searchParams.get('task');
         const q = (k) => url.searchParams.get(k);
@@ -148,6 +155,10 @@ export default {
           : await createDraft(env, { force: q('force') === '1', videoId: q('video') || '', publish: q('publish') === '1', replace: q('replace') === '1' });
         return json(r);
       } catch (e) { return json({ ok: false, error: String(e.message || e) }, 500); }
+    }
+    if (url.pathname.startsWith('/api/') && env.RL_API) {
+      const { success } = await env.RL_API.limit({ key: request.headers.get('CF-Connecting-IP') || 'x' });
+      if (!success) return security(json({ success: false, message: 'Too many requests. Please slow down.' }, 429));
     }
     if (url.pathname === '/api/ticker' && request.method === 'GET') {
       const cache = caches.default, key = new Request('https://cache.local/ticker-v1');
@@ -192,6 +203,7 @@ export default {
     if (url.pathname.startsWith('/api/')) return security(api(url, request));
     if (MEMBER_PAGES.some((m) => url.pathname === m || url.pathname.startsWith(m + '/')))
       return Response.redirect(new URL('/', url).toString(), 302);
+    if (url.pathname === '/.well-known/security.txt') return new Response(`Contact: https://www.instagram.com/equityinvestorclub/\nExpires: 2027-11-14T00:00:00.000Z\nPreferred-Languages: en, ta\n`, { headers: { 'content-type': 'text/plain' } });
     if (url.pathname === '/robots.txt') return new Response(`User-agent: *\nAllow: /\nDisallow: /cms\nDisallow: /api/\n\nSitemap: ${url.origin}/sitemap.xml\n`, { headers: { 'content-type': 'text/plain' } });
     if (url.pathname === '/sitemap.xml') {
       const r = await env.ASSETS.fetch(new Request(new URL('/sitemap.xml', url)));
