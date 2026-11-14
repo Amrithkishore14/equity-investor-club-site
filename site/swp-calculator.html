@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SWP calculator for educational purposes by Equity Investor Club." />
+  <meta property="og:title" content="SWP Calculator | Equity Investor Club" />
+  <meta property="og:description" content="Calculate how long your corpus lasts with monthly withdrawals. Educational only." />
+  <meta property="og:image" content="/images/logo.jpg" />
+  <meta property="og:url" content="https://equityinvestorclub.com/swp-calculator" />
+  <link rel="canonical" href="https://equityinvestorclub.com/swp-calculator" />
+  <title>SWP Calculator | Equity Investor Club</title>
+  <link rel="icon" href="/images/logo.jpg" />
+  <link rel="stylesheet" href="/public/css/style.css" />
+</head>
+<body>
+  <div class="content-layer">
+  <header>
+    <div class="container navbar">
+      <a class="brand" href="/"><img src="/images/logo.jpg" alt="Logo" /><span>Equity Investor Club</span></a>
+      <button class="nav-toggle" aria-label="Toggle navigation">Menu</button>
+      <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/learn">Learn</a>
+        <a href="/sip-calculator">SIP Calc</a>
+        <a href="/swp-calculator" class="active">SWP Calc</a>
+      </nav>
+      <div class="actions"><a class="btn btn-outline" href="/login">Login</a><a class="btn" href="/register">Register</a></div>
+    </div>
+  </header>
+
+  <main class="container section">
+    <h1>SWP Calculator (Educational)</h1>
+    <p class="lead">Systematic Withdrawal Plan — pure math. See how long your corpus lasts with regular withdrawals.</p>
+
+    <div class="grid-two">
+      <div class="form-card needs-disclaimer">
+        <label>Initial corpus (₹)</label>
+        <input id="swpCorpus" type="number" value="1000000" min="1" />
+        <label>Monthly withdrawal (₹)</label>
+        <input id="swpWithdrawal" type="number" value="10000" min="1" />
+        <label>Expected annual return (%)</label>
+        <input id="swpReturn" type="number" value="8" min="0" step="0.1" />
+        <label>Withdrawal period (years)</label>
+        <input id="swpYears" type="number" value="20" min="1" max="50" />
+        <button class="btn" id="swpCalcBtn">Calculate</button>
+        <div id="swpResult" class="alert" style="display:none; margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <h3>How SWP works</h3>
+        <p>You invest a lump sum and withdraw a fixed amount every month. The remaining corpus continues to earn returns.</p>
+        <hr style="margin:12px 0; border-color:var(--border);" />
+        <p class="small">Balance after each month = (Balance × (1 + r)) − Withdrawal</p>
+        <p class="small">r = monthly return rate</p>
+        <hr style="margin:12px 0; border-color:var(--border);" />
+        <div id="swpSummary" style="display:none;">
+          <p>Total Withdrawn: <strong id="swpTotalWithdrawn"></strong></p>
+          <p>Remaining Corpus: <strong id="swpRemaining"></strong></p>
+          <p>Corpus exhausted: <strong id="swpExhausted"></strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="swpBreakdownSection" style="display:none; margin-top:24px;">
+      <h2>Year-by-Year Breakdown</h2>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);">
+              <th style="text-align:left; padding:8px;">Year</th>
+              <th style="text-align:right; padding:8px;">Withdrawn (₹)</th>
+              <th style="text-align:right; padding:8px;">Interest Earned (₹)</th>
+              <th style="text-align:right; padding:8px;">Remaining Corpus (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="swpBreakdownBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="brand"><img src="/images/logo.jpg" alt="Logo" /><span>Equity Investor Club</span></div>
+      <p class="small">No advice. Just math.</p>
+      <p class="disclaimer">
+        Equity Investor Club is not a SEBI registered advisor.<br>
+        All content is for educational purposes only. Do your own analysis before investing.
+      </p>
+    </div>
+  </footer>
+  </div>
+
+  <script>
+    function fmt(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+
+    document.querySelector('#swpCalcBtn').addEventListener('click', () => {
+      const corpus = Number(document.querySelector('#swpCorpus').value || 0);
+      const withdrawal = Number(document.querySelector('#swpWithdrawal').value || 0);
+      const rYear = Number(document.querySelector('#swpReturn').value || 0) / 100;
+      const years = Number(document.querySelector('#swpYears').value || 0);
+      const resBox = document.querySelector('#swpResult');
+
+      if (corpus <= 0 || withdrawal <= 0 || years <= 0) {
+        resBox.textContent = 'Enter positive numbers for corpus, withdrawal, and years.';
+        resBox.className = 'alert error';
+        resBox.style.display = 'block';
+        document.querySelector('#swpSummary').style.display = 'none';
+        document.querySelector('#swpBreakdownSection').style.display = 'none';
+        return;
+      }
+
+      const r = rYear / 12;
+      let balance = corpus;
+      let totalWithdrawn = 0;
+      let exhaustedAt = null;
+      const rows = [];
+
+      for (let y = 1; y <= years; y++) {
+        let yearWithdrawn = 0;
+        let yearInterest = 0;
+        const startBalance = balance;
+        for (let m = 1; m <= 12; m++) {
+          if (balance <= 0) { balance = 0; break; }
+          const interest = balance * r;
+          yearInterest += interest;
+          balance = balance + interest - withdrawal;
+          if (balance < 0) {
+            yearWithdrawn += withdrawal + balance; // partial last withdrawal
+            totalWithdrawn += withdrawal + balance;
+            if (!exhaustedAt) exhaustedAt = `Year ${y}, Month ${m}`;
+            balance = 0;
+          } else {
+            yearWithdrawn += withdrawal;
+            totalWithdrawn += withdrawal;
+          }
+        }
+        rows.push({ year: y, withdrawn: yearWithdrawn, interest: yearInterest, remaining: Math.max(0, balance) });
+        if (balance <= 0 && !exhaustedAt) exhaustedAt = `End of Year ${y}`;
+        if (balance <= 0) break;
+      }
+
+      const last = rows[rows.length - 1];
+      resBox.textContent = balance <= 0
+        ? `Corpus exhausted at ${exhaustedAt}. Total withdrawn: ${fmt(totalWithdrawn)}.`
+        : `After ${years} year(s), remaining corpus: ${fmt(balance)}. Total withdrawn: ${fmt(totalWithdrawn)}.`;
+      resBox.className = balance <= 0 ? 'alert error' : 'alert success';
+      resBox.style.display = 'block';
+
+      document.querySelector('#swpTotalWithdrawn').textContent = fmt(totalWithdrawn);
+      document.querySelector('#swpRemaining').textContent = fmt(Math.max(0, balance));
+      document.querySelector('#swpExhausted').textContent = exhaustedAt || 'Not exhausted in this period';
+      document.querySelector('#swpSummary').style.display = 'block';
+
+      const tbody = document.querySelector('#swpBreakdownBody');
+      tbody.innerHTML = rows.map(row =>
+        `<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:8px;">Year ${row.year}</td>
+          <td style="text-align:right; padding:8px;">${fmt(row.withdrawn)}</td>
+          <td style="text-align:right; padding:8px;">${fmt(row.interest)}</td>
+          <td style="text-align:right; padding:8px;">${fmt(row.remaining)}</td>
+        </tr>`
+      ).join('');
+      document.querySelector('#swpBreakdownSection').style.display = 'block';
+    });
+  </script>
+  <script src="/public/js/main.js"></script>
+</body>
+</html>

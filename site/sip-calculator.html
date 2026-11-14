@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Simple SIP calculator for educational purposes by Equity Investor Club." />
+  <meta property="og:title" content="SIP Calculator | Equity Investor Club" />
+  <meta property="og:description" content="Compute SIP contributions for learning purposes. No recommendations or tips." />
+  <meta property="og:image" content="/images/logo.jpg" />
+  <meta property="og:url" content="https://equityinvestorclub.com/sip-calculator" />
+  <link rel="canonical" href="https://equityinvestorclub.com/sip-calculator" />
+  <title>SIP Calculator | Equity Investor Club</title>
+  <link rel="icon" href="/images/logo.jpg" />
+  <link rel="stylesheet" href="/public/css/style.css" />
+</head>
+<body>
+  <div class="content-layer">
+  <header>
+    <div class="container navbar">
+      <a class="brand" href="/"><img src="/images/logo.jpg" alt="Logo" /><span>Equity Investor Club</span></a>
+      <button class="nav-toggle" aria-label="Toggle navigation">Menu</button>
+      <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/learn">Learn</a>
+        <a href="/sip-calculator" class="active">SIP Calc</a>
+      </nav>
+      <div class="actions"><a class="btn btn-outline" href="/login">Login</a><a class="btn" href="/register">Register</a></div>
+    </div>
+  </header>
+
+  <main class="container section">
+    <h1>SIP Calculator (Educational)</h1>
+    <p class="lead">Pure math. No recommendations. Enter numbers to see projected corpus.</p>
+    <div class="grid-two">
+      <div class="form-card needs-disclaimer">
+        <label>Monthly investment (₹)</label>
+        <input id="sipMonthly" type="number" value="5000" min="1" />
+        <label>Expected annual return (%)</label>
+        <input id="sipReturn" type="number" value="10" min="0.1" step="0.1" />
+        <label>Investment period (years)</label>
+        <input id="sipYears" type="number" value="10" min="1" max="40" />
+        <button class="btn" id="sipCalcBtn">Calculate</button>
+        <div id="sipResult" class="alert" style="display:none; margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <h3>Formula</h3>
+        <p>Future Value = P × (((1+r)ⁿ − 1) / r) × (1+r)</p>
+        <p class="small">P = monthly amount · r = monthly rate · n = months</p>
+        <hr style="margin:12px 0; border-color:var(--border);" />
+        <div id="sipSummary" style="display:none;">
+          <p>Total Invested: <strong id="sipInvested"></strong></p>
+          <p>Estimated Returns: <strong id="sipReturns"></strong></p>
+          <p>Projected Corpus: <strong id="sipCorpus"></strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="sipBreakdownSection" style="display:none; margin-top:24px;">
+      <h2>Year-by-Year Breakdown</h2>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);">
+              <th style="text-align:left; padding:8px;">Year</th>
+              <th style="text-align:right; padding:8px;">Invested (₹)</th>
+              <th style="text-align:right; padding:8px;">Returns (₹)</th>
+              <th style="text-align:right; padding:8px;">Corpus (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="sipBreakdownBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="brand"><img src="/images/logo.jpg" alt="Logo" /><span>Equity Investor Club</span></div>
+      <p class="small">No advice. Just math.</p>
+    </div>
+  </footer>
+  </div>
+  <script>
+    function fmt(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+
+    document.querySelector('#sipCalcBtn').addEventListener('click', () => {
+      const P = Number(document.querySelector('#sipMonthly').value || 0);
+      const rYear = Number(document.querySelector('#sipReturn').value || 0) / 100;
+      const years = Number(document.querySelector('#sipYears').value || 0);
+      const resBox = document.querySelector('#sipResult');
+
+      if (P <= 0 || rYear <= 0 || years <= 0) {
+        resBox.textContent = 'Enter positive numbers.';
+        resBox.className = 'alert error';
+        resBox.style.display = 'block';
+        document.querySelector('#sipSummary').style.display = 'none';
+        document.querySelector('#sipBreakdownSection').style.display = 'none';
+        return;
+      }
+
+      const r = rYear / 12;
+      const rows = [];
+      for (let y = 1; y <= years; y++) {
+        const n = y * 12;
+        const corpus = P * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+        const invested = P * n;
+        rows.push({ year: y, invested, returns: corpus - invested, corpus });
+      }
+      const last = rows[rows.length - 1];
+
+      resBox.textContent = `Projected corpus after ${years} year(s): ${fmt(last.corpus)}`;
+      resBox.className = 'alert success';
+      resBox.style.display = 'block';
+
+      document.querySelector('#sipInvested').textContent = fmt(last.invested);
+      document.querySelector('#sipReturns').textContent = fmt(last.returns);
+      document.querySelector('#sipCorpus').textContent = fmt(last.corpus);
+      document.querySelector('#sipSummary').style.display = 'block';
+
+      const tbody = document.querySelector('#sipBreakdownBody');
+      tbody.innerHTML = rows.map(row =>
+        `<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:8px;">Year ${row.year}</td>
+          <td style="text-align:right; padding:8px;">${fmt(row.invested)}</td>
+          <td style="text-align:right; padding:8px;">${fmt(row.returns)}</td>
+          <td style="text-align:right; padding:8px;">${fmt(row.corpus)}</td>
+        </tr>`
+      ).join('');
+      document.querySelector('#sipBreakdownSection').style.display = 'block';
+    });
+  </script>
+  <script src="/public/js/main.js"></script>
+</body>
+</html>
