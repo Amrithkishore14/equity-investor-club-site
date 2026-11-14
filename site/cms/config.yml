@@ -14,11 +14,30 @@ collections:
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     summary: "{{title}} ({{date}})"
     sortable_fields: [date, title]
+    view_filters:
+      - { label: "Waiting for you (drafts)", field: draft, pattern: true }
+      - { label: "Live", field: draft, pattern: false }
+      - { label: "Made by the robot", field: auto, pattern: true }
     fields:
+      - { name: note, label: "Message from the robot", widget: text, required: false, hint: "Read this first. The robot tells you what to double-check. You can leave it as it is." }
+      - { name: draft, label: "Draft (not live yet)", widget: boolean, default: true, hint: "Untick and Save to publish now. Robot drafts publish on their own at 9pm UK unless you tick Hold." }
+      - { name: hold, label: "Hold (stop the 9pm auto-publish)", widget: boolean, default: false, required: false }
       - { name: title, label: Title, widget: string }
-      - { name: date, label: Publish date, widget: datetime, hint: "Posts with a future date go live on the first build after that date." }
-      - { name: summary, label: Short summary, widget: text, required: false, hint: "Shown on the Articles page. Leave empty to use the first lines." }
+      - { name: date, label: Publish date, widget: datetime }
+      - { name: summary, label: Short summary, widget: text, required: false }
       - { name: category, label: Category, widget: select, required: false, options: [Basics, Stock market, Mutual funds, Personal finance, Market update] }
       - { name: cover, label: Cover image, widget: image, required: false }
-      - { name: draft, label: Draft (hidden), widget: boolean, default: false }
-      - { name: body, label: Article, widget: markdown }
+      - { name: body, label: "Article (English)", widget: markdown }
+      - { name: title_ta, label: "Title (Tamil)", widget: string, required: false }
+      - { name: summary_ta, label: "Summary (Tamil)", widget: text, required: false }
+      - { name: body_ta, label: "Article (Tamil)", widget: markdown, required: false, hint: "Machine-translated by the robot. Fix anything that reads oddly." }
+      - name: quiz
+        label: Quiz
+        widget: list
+        required: false
+        fields:
+          - { name: q, label: Question, widget: string }
+          - { name: options, label: Options, widget: list, field: { name: option, label: Option, widget: string } }
+          - { name: answer, label: "Correct option number (0 = first)", widget: number, value_type: int, min: 0, max: 5 }
+      - { name: source, label: "Source credit", widget: string, required: false }
+      - { name: auto, label: "Made by the robot", widget: boolean, default: false, required: false }

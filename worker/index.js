@@ -4,6 +4,7 @@
 // Articles come from the CMS at /cms (content/articles/*.md, built by build.js).
 import stocks from './stocks.json';
 import posts from './posts.json';
+import { createDraft, publishToday, londonParts } from './autopost.js';
 
 const IG = 'https://www.instagram.com/equityinvestorclub/';
 const NOTICE = 'Member accounts are not open yet. Follow @equityinvestorclub on Instagram for updates.';
@@ -52,6 +53,12 @@ class Instagram {
   }
 }
 
+class ToolsLink {
+  element(el) {
+    el.append('<a href="/tools">Tools</a>', { html: true });
+  }
+}
+
 class Remove {
   element(el) {
     el.remove();
@@ -59,8 +66,21 @@ class Remove {
 }
 
 export default {
+  async scheduled(event, env, ctx) {
+    const { hour } = londonParts();
+    if (hour === 15) ctx.waitUntil(createDraft(env).then((r) => console.log('autopost', JSON.stringify(r))));
+    if (hour === 21) ctx.waitUntil(publishToday(env).then((r) => console.log('autopublish', JSON.stringify(r))));
+  },
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/api/robot/run' && request.method === 'POST') {
+      if (!env.RUN_KEY || request.headers.get('X-Run-Key') !== env.RUN_KEY) return json({ ok: false }, 403);
+      try {
+        const task = url.searchParams.get('task');
+        const r = task === 'publish' ? await publishToday(env) : await createDraft(env, { force: url.searchParams.get('force') === '1' });
+        return json(r);
+      } catch (e) { return json({ ok: false, error: String(e.message || e) }, 500); }
+    }
     if (url.pathname.startsWith('/api/')) return security(api(url, request));
     if (MEMBER_PAGES.some((m) => url.pathname === m || url.pathname.startsWith(m + '/')))
       return Response.redirect(new URL('/login', url).toString(), 302);
@@ -72,7 +92,7 @@ export default {
     }
     const type = res.headers.get('content-type') || '';
     if (type.includes('text/html'))
-      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
+      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links', new ToolsLink()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
     return security(res);
   },
 };

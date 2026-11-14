@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Loan EMI calculator for learning purposes." />
+  <title>Loan EMI Calculator | Equity Investor Club</title>
+  <link rel="icon" href="/images/logo.jpg" />
+  <link rel="stylesheet" href="/public/css/style.css" />
+</head>
+<body>
+  <div class="content-layer">
+  <header>
+    <div class="container navbar">
+      <a class="brand" href="/"><img src="/images/logo.jpg" alt="Logo" /><span>Equity Investor Club</span></a>
+      <button class="nav-toggle" aria-label="Toggle navigation">Menu</button>
+      <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/learn">Learn</a>
+        <a href="/sip-calculator">SIP Calc</a>
+      </nav>
+      <div class="actions"><a class="btn btn-outline" href="/login">Login</a><a class="btn" href="/register">Register</a></div>
+    </div>
+  </header>
+
+  <main class="container section">
+    <h1>Loan EMI Calculator (Educational)</h1>
+    <p class="lead">See your monthly EMI and how much interest a loan really costs.</p>
+    <div class="grid-two">
+      <div class="form-card needs-disclaimer">
+        <label>Loan amount (₹)</label><input id="emiAmount" type="number" value="3000000" min="1" />
+        <label>Interest rate (% per year)</label><input id="emiRate" type="number" value="8.5" min="0.1" step="0.1" />
+        <label>Loan tenure (years)</label><input id="emiYears" type="number" value="20" min="1" max="40" />
+        <button class="btn" id="emiCalcBtn">Calculate</button>
+        <div id="emiResult" class="alert" style="display:none; margin-top:10px;"></div>
+      </div>
+      <div class="card"><h3>Formula</h3><p>EMI = P × r × (1+r)ⁿ / ((1+r)ⁿ − 1)</p><p class="small">P = loan · r = monthly rate · n = months</p></div>
+    </div>
+    <section class="section needs-disclaimer" id="examples"><h2>Explained with real-life examples</h2><div class="cards"><div class="card"><h3>A ₹30 lakh home loan</h3><p>Ravi takes a ₹30,00,000 home loan for 20 years at 8.5% a year.</p><p class="small"><strong>Result:</strong> His EMI is about ₹26,035 a month, and he pays about ₹32,48,327 in interest, more than the loan itself.</p><button class="btn btn-outline try-example" data-a="3000000" data-r="8.5" data-y="20">Try this example</button></div><div class="card"><h3>A ₹8 lakh car loan</h3><p>Divya borrows ₹8,00,000 for 5 years at 9% a year.</p><p class="small"><strong>Result:</strong> Her EMI is about ₹16,607 and total interest is about ₹1,96,401. Shorter loans cost far less interest.</p><button class="btn btn-outline try-example" data-a="800000" data-r="9" data-y="5">Try this example</button></div></div><p class="small" style="margin-top:12px;">Returns and rates here are assumptions to show how the maths works. Nothing is guaranteed.</p></section>
+  </main>
+<footer class="footer">
+    <div class="container footer-grid">
+      <div class="brand"><img src="/images/logo.jpg" alt="Logo" /><span>Equity Investor Club</span></div>
+      <p class="small">No advice. Just math.</p>
+    </div>
+  </footer>
+  </div>
+  <script>
+function fmt(n){return "₹"+Math.round(n).toLocaleString("en-IN");}
+document.querySelector('#emiCalcBtn').addEventListener('click',()=>{const P=+emiAmount.value,r=+emiRate.value/1200,n=+emiYears.value*12,b=document.querySelector('#emiResult');if(P<=0||r<=0||n<=0){b.textContent='Enter positive numbers.';b.className='alert error';b.style.display='block';return;}const e=P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);b.textContent=`EMI about ${fmt(e)} a month. Total interest about ${fmt(e*n-P)}; total paid ${fmt(e*n)}.`;b.className='alert success';b.style.display='block';});
+document.querySelectorAll('.try-example').forEach(x=>x.addEventListener('click',()=>{emiAmount.value=x.dataset.a;emiRate.value=x.dataset.r;emiYears.value=x.dataset.y;emiCalcBtn.click();scrollTo({top:0,behavior:'smooth'});}));
+</script>
+  <script src="/public/js/main.js"></script>
+</body>
+</html>

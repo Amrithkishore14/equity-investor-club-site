@@ -71,7 +71,18 @@
         </table>
       </div>
     </div>
-  </main>
+  
+    <section class="section needs-disclaimer" id="examples">
+      <h2>Explained with real-life examples</h2>
+      <p class="lead">SIP means investing a fixed amount every month. These examples show what that does over time.</p>
+      <div class="cards">
+<div class="card"><h3>Priya starts with ₹2,000 a month</h3><p>Priya, 25, puts ₹2,000 a month into an equity mutual fund for 20 years, assuming 12% a year.</p><p class="small"><strong>Result:</strong> She invests ₹4,80,000 in total and could end up with about ₹19,98,296. Most of that growth comes in the later years, which is compounding at work.</p><button class="btn btn-outline try-example" data-m="2000" data-r="12" data-y="20">Try this example</button></div>
+<div class="card"><h3>Starting 10 years earlier</h3><p>Same ₹5,000 a month at 12%. One person invests for 30 years, another starts later and invests for 20.</p><p class="small"><strong>Result:</strong> 30 years: ₹18,00,000 invested becomes about ₹1,76,49,569. 20 years: ₹12,00,000 becomes about ₹49,95,740. Ten extra years is worth more than three times as much.</p><button class="btn btn-outline try-example" data-m="5000" data-r="12" data-y="30">Try this example</button></div>
+<div class="card"><h3>Short goal, 10 years</h3><p>Arjun saves ₹5,000 a month for 10 years for a house down payment, assuming 12%.</p><p class="small"><strong>Result:</strong> ₹6,00,000 invested could grow to about ₹11,61,695. For shorter goals, keep in mind equity can fall just before you need the money.</p><button class="btn btn-outline try-example" data-m="5000" data-r="12" data-y="10">Try this example</button></div>
+      </div>
+      <p class="small" style="margin-top:12px;">Returns used here are assumptions to show how the maths works. Real market returns go up and down and are never guaranteed.</p>
+    </section>
+</main>
 
   <footer class="footer">
     <div class="container footer-grid">
@@ -129,6 +140,9 @@
       document.querySelector('#sipBreakdownSection').style.display = 'block';
     });
   </script>
+  <script>
+document.querySelectorAll('.try-example').forEach(b=>b.addEventListener('click',()=>{document.querySelector('#sipMonthly').value=b.dataset.m;document.querySelector('#sipReturn').value=b.dataset.r;document.querySelector('#sipYears').value=b.dataset.y;document.querySelector('#sipCalcBtn').click();window.scrollTo({top:0,behavior:'smooth'});}));
+</script>
   <script src="/public/js/main.js"></script>
 </body>
 </html>
