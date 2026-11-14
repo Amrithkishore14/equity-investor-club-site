@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { marked } = require('marked');
 const yaml = require('js-yaml');
+const sharp = require('sharp');
 
 const SITE = 'site', OUT = 'dist', POSTS = 'content/articles';
 fs.rmSync(OUT, { recursive: true, force: true });
@@ -71,7 +72,12 @@ for (const p of posts) {
     ${quiz.map((q, i) => `<div class="card quiz" data-answer="${Number(q.answer) || 0}" style="margin-bottom:12px;"><h3 style="margin-bottom:8px;">${i + 1}. ${esc(q.q)}</h3>
       ${q.options.map((o, k) => `<button class="btn btn-outline quiz-opt" data-k="${k}" style="display:block;width:100%;text-align:left;margin:6px 0;">${esc(o)}</button>`).join('')}
       <p class="small quiz-msg"></p></div>`).join('')}</section>` : '';
-  const html = header.replace('__TITLE__', esc(d.title)).replace('__DESC__', esc(p.excerpt)) + `<main class="container section">
+  const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: d.title, description: p.excerpt, datePublished: d.date, author: { '@type': 'Person', name: 'Amrith Kishore M' }, publisher: { '@type': 'Organization', name: 'Equity Investor Club' }, ...(d.cover ? { image: d.cover } : {}), inLanguage: ['en', 'ta'] };
+  const meta = `<meta property="og:type" content="article" /><meta property="og:title" content="${esc(d.title)}" /><meta property="og:description" content="${esc(p.excerpt)}" /><meta property="og:url" content="/articles/${p.slug}/" />${d.cover ? `<meta property="og:image" content="${esc(d.cover)}" /><meta name="twitter:image" content="${esc(d.cover)}" />` : '<meta property="og:image" content="/images/logo.jpg" />'}<meta name="twitter:card" content="summary_large_image" /><link rel="canonical" href="/articles/${p.slug}/" /><script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
+  const related = posts.filter((x) => x !== p && (x.data.category === d.category || (d.chart && x.data.chart && x.data.chart.symbol === d.chart.symbol))).slice(0, 3);
+  const more = (related.length ? related : posts.filter((x) => x !== p).slice(0, 3));
+  const readNext = more.length ? `<section class="section"><h2>Read next</h2><div class="cards">${more.map((x) => `<a class="card art-card" href="/articles/${x.slug}/" style="padding:0;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column">${x.data.cover ? `<img src="${esc(x.data.cover)}" alt="" loading="lazy" style="width:100%;aspect-ratio:16/9;object-fit:cover">` : ''}<div style="padding:14px 16px 18px"><p class="small">${esc(x.data.category || 'Article')}</p><h3 style="margin:6px 0 0;line-height:1.3">${esc(x.data.title)}</h3></div></a>`).join('')}</div></section>` : '';
+  const html = header.replace('__TITLE__', esc(d.title)).replace('__DESC__', esc(p.excerpt)).replace('</head>', meta + '</head>') + `<main class="container section">
   <a href="/articles" class="btn btn-outline">← All articles</a>
   <article>
     ${hasTa ? `<div role="group" aria-label="Language" style="margin:12px 0;display:flex;gap:8px;"><button class="btn lang-btn" data-lang="en" aria-pressed="true">English</button><button class="btn btn-outline lang-btn" data-lang="ta" aria-pressed="false">தமிழ்</button></div>` : ''}
@@ -87,6 +93,7 @@ for (const p of posts) {
     <p class="small" style="margin-top:12px;"><strong>Disclosure:</strong> ${d.chart && held.has(String(d.chart.symbol).toUpperCase()) ? `The author holds ${esc(d.chart.name || d.chart.symbol)} shares in a personal portfolio.` : 'The author may hold shares in companies mentioned; see <a href="/holdings">our holdings disclosure</a>.'} This article is for education only and is not a recommendation to buy, sell or hold any security. <a href="/disclaimer">Read the full disclaimer</a>.</p>
   </article>
   ${quizHtml}
+  ${readNext}
   <section class="section"><h2>Try the numbers yourself</h2><p><a class="btn btn-outline" href="/sip-calculator">SIP calculator</a> <a class="btn btn-outline" href="/swp-calculator">SWP calculator</a> <a class="btn btn-outline" href="/tools">All tools</a></p></section>
   <div class="disclaimer">Disclaimer:<br>Equity Investor Club is not a SEBI registered advisor.<br>All content on this website is for educational and learning purposes only.<br>Do your own analysis before making any investment decision.</div>
 </main>
@@ -110,8 +117,8 @@ document.querySelectorAll('.quiz').forEach((card) => card.querySelectorAll('.qui
 }
 
 // ---- Static pages built from data ----
-function page(slug, title, html) {
-  const out = header.replace('__TITLE__', esc(title)).replace('__DESC__', esc(title)) + `<main class="container section">${html}</main>\n` + footer;
+function page(slug, title, html, desc) {
+  const out = header.replace('__TITLE__', esc(title)).replace('__DESC__', esc(desc || title)).replace('</head>', `<link rel="canonical" href="/${slug}/" /><meta property="og:title" content="${esc(title)}" /><meta property="og:description" content="${esc(desc || title)}" /><meta property="og:image" content="/images/logo.jpg" /></head>`) + `<main class="container section">${html}</main>\n` + footer;
   fs.mkdirSync(path.join(OUT, slug), { recursive: true });
   fs.writeFileSync(path.join(OUT, slug, 'index.html'), out);
 }
@@ -124,7 +131,7 @@ page('holdings', "Stocks I invest in", `<h1>Stocks I invest in</h1>
   <p class="lead">For transparency, these are the listed securities that Equity Investor Club's founder, Amrith Kishore M, holds in a personal portfolio. Quantities, prices and values are not shared. Tap a company to see its fundamentals and today's technical picture.</p>
   ${stocks.length ? `<div class="cards">${stocks.map((h) => { const s = encodeURIComponent(String(h.symbol).toUpperCase()); return `<div class="card"><h3>${esc(h.name)}</h3><p class="small">${esc(h.exchange || 'NSE')}: ${esc(h.symbol)}</p><p><a class="btn btn-outline" href="/stocks/${s}/#fundamental">Fundamental analysis</a> <a class="btn btn-outline" href="/stocks/${s}/#technical">Technical analysis</a></p></div>`; }).join('')}</div>` : '<p>The list is being updated.</p>'}
   ${holdings.updated ? `<p class="small" style="margin-top:12px;">List last updated: ${esc(new Date(holdings.updated).toDateString())}</p>` : ''}
-  <div class="disclaimer" style="margin-top:16px;">This list is a disclosure of personal interest, not a recommendation. Holding a stock does not mean it is suitable for you. Equity Investor Club is not registered with SEBI as an Investment Adviser or Research Analyst. <a href="/disclaimer">Full disclaimer</a>.</div>`);
+  <div class="disclaimer" style="margin-top:16px;">This list is a disclosure of personal interest, not a recommendation. Holding a stock does not mean it is suitable for you. Equity Investor Club is not registered with SEBI as an Investment Adviser or Research Analyst. <a href="/disclaimer">Full disclaimer</a>.</div>`, 'The listed companies Equity Investor Club\'s founder invests in, each with free fundamental and daily technical analysis. Education only.');
 for (const h of stocks) {
   const sym = String(h.symbol).toUpperCase();
   page(`stocks/${sym}`, `${h.name} (${sym})`, `<a href="/holdings" class="btn btn-outline">← All stocks</a>
@@ -133,7 +140,7 @@ for (const h of stocks) {
   <section id="fundamental" class="panel update-card"><p class="small">Loading fundamentals…</p></section>
   <section id="technical" class="panel update-card" hidden><p class="small">Loading today's technical data…</p></section>
   ${DISC}
-  <script>
+  <script>/* stock page */
   (function(){
     const SYM=${JSON.stringify(sym)}, inr=(v)=>v==null?'–':'₹'+Number(v).toLocaleString('en-IN',{maximumFractionDigits:2}), n=(v,s='')=>v==null?'–':Number(v).toLocaleString('en-IN',{maximumFractionDigits:2})+s, e=(t)=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     function show(t){document.querySelectorAll('.panel').forEach(p=>p.hidden=p.id!==t);document.querySelectorAll('.tab').forEach(b=>{const on=b.dataset.tab===t;b.classList.toggle('btn-outline',!on);b.setAttribute('aria-selected',on);});if(location.hash!=='#'+t)history.replaceState(null,'','#'+t);}
@@ -158,7 +165,7 @@ for (const h of stocks) {
       '<h3>What the indicators show</h3><ul>'+t.notes.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul><p class="small">Indicators describe past price movement only and do not predict future prices. Price data: Yahoo Finance, delayed.</p>';
     }).catch(()=>{document.getElementById('technical').innerHTML='<p>Technical data is unavailable right now.</p>';});
   })();
-  </script>`);
+  </script>`, `${h.name} (NSE: ${sym}): key fundamentals and today's technical indicators (moving averages, RSI, MACD), explained simply. Education only, not advice.`);
 }
 
 page('disclaimer', 'Disclaimer', `<h1>Disclaimer</h1>
@@ -176,9 +183,23 @@ page('disclaimer', 'Disclaimer', `<h1>Disclaimer</h1>
   <h2>No affiliation</h2>
   <p>We are not affiliated with or endorsed by any company, exchange or fund house mentioned. Company names and trademarks belong to their owners.</p>
   <h2>Your responsibility</h2>
-  <p>You are solely responsible for your own investment decisions. Equity Investor Club and its founder accept no liability for any loss arising from the use of this website.</p>`);
+  <p>You are solely responsible for your own investment decisions. Equity Investor Club and its founder accept no liability for any loss arising from the use of this website.</p>`, 'Equity Investor Club is not a SEBI-registered adviser. All content is for education only. Read our full disclaimer and holdings disclosure.');
 
 const takeaways = (body) => { const m = body.split(/^##\s+Key takeaways.*$/im)[1]; return m ? m.split(/^##\s/m)[0].split('\n').filter((l) => /^\s*[-*]\s/.test(l)).map((l) => l.replace(/^\s*[-*]\s+/, '').replace(/\*\*/g, '').trim()).slice(0, 4) : []; };
 fs.writeFileSync('worker/posts.json', JSON.stringify(posts.map((p) => ({ id: p.slug, title: p.data.title, slug: p.slug, excerpt: p.excerpt, publish_at: p.data.date || null,
   cover: p.data.cover || '', category: p.data.category || '', tip: p.data.tip || '', takeaways: takeaways(p.body), quiz: Array.isArray(p.data.quiz) ? p.data.quiz.slice(0, 1) : [] }))));
 console.log(`Built ${posts.length} article(s).`);
+
+// Shrink large cover images so pages load fast on mobile data.
+(async () => {
+  const dir = path.join(OUT, 'public', 'uploads', 'auto');
+  if (!fs.existsSync(dir)) return;
+  let saved = 0;
+  for (const f of fs.readdirSync(dir).filter((x) => /\.jpe?g$/i.test(x))) {
+    const fp = path.join(dir, f), before = fs.statSync(fp).size;
+    if (before < 180 * 1024) continue;
+    const buf = await sharp(fp).resize({ width: 1200, withoutEnlargement: true }).jpeg({ quality: 72, progressive: true, mozjpeg: true }).toBuffer();
+    if (buf.length < before) { fs.writeFileSync(fp, buf); saved += before - buf.length; }
+  }
+  console.log(`Compressed covers, saved ${Math.round(saved / 1024)} KB.`);
+})();

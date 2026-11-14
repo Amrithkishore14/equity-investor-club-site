@@ -22,6 +22,8 @@ function security(res) {
   h.set('X-Frame-Options', 'DENY');
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   h.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  if ((h.get('content-type') || '').includes('text/html') && !h.has('Content-Security-Policy'))
+    h.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.github.com https://*.githubusercontent.com https://unpkg.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'");
   h.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
   return r;
 }
@@ -91,6 +93,23 @@ class HeatMap {
 class FxAssets {
   element(el) {
     el.append('<script src="/public/js/eic-fx.js" defer></script>', { html: true });
+  }
+}
+
+class HostFix {
+  constructor(origin) { this.origin = origin; }
+  element(el) {
+    for (const a of ['href', 'content']) {
+      const v = el.getAttribute(a);
+      if (v && v.includes('equityinvestorclub.com')) el.setAttribute(a, v.replace(/https?:\/\/(www\.)?equityinvestorclub\.com/g, this.origin));
+      else if (v && a === 'content' && v.startsWith('/')) el.setAttribute(a, this.origin + v);
+    }
+  }
+}
+
+class ContactCta {
+  element(el) {
+    el.replace(`<div class="update-card"><h3>Get in touch</h3><p>The quickest way to reach us is a message on Instagram. You can also use the email shown on our <a href="/contact">contact page</a>.</p><p style="margin-top:12px;"><a class="btn" href="https://www.instagram.com/equityinvestorclub/" target="_blank" rel="noopener">Message on Instagram</a></p><p class="small" style="margin-top:10px;">We share education only and never give personal investment advice.</p></div>`, { html: true });
   }
 }
 
@@ -166,15 +185,25 @@ export default {
     if (url.pathname.startsWith('/api/')) return security(api(url, request));
     if (MEMBER_PAGES.some((m) => url.pathname === m || url.pathname.startsWith(m + '/')))
       return Response.redirect(new URL('/', url).toString(), 302);
+    if (url.pathname === '/robots.txt') return new Response(`User-agent: *\nAllow: /\nDisallow: /cms\nDisallow: /api/\n\nSitemap: ${url.origin}/sitemap.xml\n`, { headers: { 'content-type': 'text/plain' } });
+    if (url.pathname === '/sitemap.xml') {
+      const r = await env.ASSETS.fetch(new Request(new URL('/sitemap.xml', url)));
+      let x = (await r.text()).replace(/https?:\/\/(www\.)?equityinvestorclub\.com/g, url.origin);
+      const extra = [...posts.map((p) => `/articles/${p.slug}/`), '/holdings/', ...heldSymbols().map((s) => `/stocks/${encodeURIComponent(s)}/`)]
+        .map((u) => `  <url><loc>${url.origin}${u}</loc></url>`).join('\n');
+      x = x.replace('</urlset>', `${extra}\n</urlset>`);
+      return new Response(x, { headers: { 'content-type': 'application/xml' } });
+    }
     const res = await env.ASSETS.fetch(request);
     if (url.pathname.startsWith('/cms')) {
       const r = security(res);
+      r.headers.delete('Content-Security-Policy'); // the CMS loads its editor from unpkg and talks to GitHub
       r.headers.set('X-Robots-Tag', 'noindex, nofollow');
       return r;
     }
     const type = res.headers.get('content-type') || '';
     if (type.includes('text/html'))
-      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links a[href="/articles"]', new Remove()).on('.nav-links a[href="/tools"]', new Remove()).on('.nav-links', new ToolsLink()).on('head', new HideUnused()).on('.hero-visual', new MarketBoard()).on('section.hero', new HeatMap()).on('body', new FxAssets()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
+      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links a[href="/articles"]', new Remove()).on('.nav-links a[href="/tools"]', new Remove()).on('.nav-links', new ToolsLink()).on('head', new HideUnused()).on('link[rel="canonical"]', new HostFix(url.origin)).on('meta[property^="og:"]', new HostFix(url.origin)).on('meta[name^="twitter:"]', new HostFix(url.origin)).on('form#contactForm', new ContactCta()).on('form#inquiryForm', new ContactCta()).on('.hero-visual', new MarketBoard()).on('section.hero', new HeatMap()).on('body', new FxAssets()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
     return security(res);
   },
 };

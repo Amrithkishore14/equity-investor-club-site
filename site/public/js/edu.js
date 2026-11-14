@@ -114,6 +114,7 @@ if (newsletterForm) {
   }
   const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const cats = [...new Set(data.articles.map((a) => a.category).filter(Boolean))];
+  const search = `<input id="artSearch" type="search" placeholder="Search articles, e.g. ITC, gold, dividend" aria-label="Search articles" style="grid-column:1/-1;width:100%;padding:12px 16px;border-radius:999px;border:1px solid var(--line, rgba(255,255,255,.12));background:var(--card);color:var(--text);font:inherit;">`;
   const filters = cats.length > 1 ? `<div class="art-filters" role="group" aria-label="Filter by topic"><button class="btn art-f" data-c="">All</button>${cats.map((c) => `<button class="btn btn-outline art-f" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : '';
   const card = (a) => `<a class="card art-card" data-c="${esc(a.category || '')}" href="/articles/${esc(a.slug)}/">
       ${a.cover ? `<img src="${esc(a.cover)}" alt="" loading="lazy">` : ''}
@@ -128,12 +129,16 @@ if (newsletterForm) {
     .art-body{padding:16px 18px 20px}.art-body h3{margin:6px 0 8px;line-height:1.3}.art-body p:last-of-type{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
     .art-more{font-weight:600;font-size:.9rem;opacity:.85}
     @media (prefers-reduced-motion:reduce){.art-card{transition:none}.art-card:hover{transform:none}}
-  </style>${filters}<div id="artGrid" class="cards" style="display:contents">${data.articles.map(card).join('')}</div>`;
+  </style>${search}${filters}<div id="artGrid" class="cards" style="display:contents">${data.articles.map(card).join('')}</div>`;
   listWrap.innerHTML = html;
+  let cat = '', q = '';
+  const apply = () => listWrap.querySelectorAll('.art-card').forEach((c) => { c.hidden = (!!cat && c.dataset.c !== cat) || (!!q && !c.textContent.toLowerCase().includes(q)); });
   listWrap.querySelectorAll('.art-f').forEach((b) => b.addEventListener('click', () => {
     listWrap.querySelectorAll('.art-f').forEach((x) => x.classList.toggle('btn-outline', x !== b));
-    listWrap.querySelectorAll('.art-card').forEach((c) => { c.hidden = !!b.dataset.c && c.dataset.c !== b.dataset.c; });
+    cat = b.dataset.c; apply();
   }));
+  const si = document.getElementById('artSearch');
+  if (si) si.addEventListener('input', () => { q = si.value.trim().toLowerCase(); apply(); });
 })();
 
 // Smart dashboard widgets (placeholder logic)
