@@ -116,11 +116,51 @@ function page(slug, title, html) {
   fs.writeFileSync(path.join(OUT, slug, 'index.html'), out);
 }
 const stocks = holdings.stocks || [];
-page('holdings', "Founder's holdings disclosure", `<h1>Founder's holdings disclosure</h1>
-  <p class="lead">For transparency, these are the listed Indian companies that Equity Investor Club's founder, Amrith Kishore M, currently holds in a personal portfolio. Quantities, prices and values are not shared.</p>
-  ${stocks.length ? `<div class="cards">${stocks.map((h) => `<div class="card"><h3>${esc(h.name)}</h3><p class="small">${esc(h.exchange || 'NSE')}: ${esc(h.symbol || '')}</p></div>`).join('')}</div>` : '<p>The list is being updated.</p>'}
-  ${holdings.updated ? `<p class="small" style="margin-top:12px;">Last updated: ${esc(new Date(holdings.updated).toDateString())}</p>` : ''}
+const fundamentalsData = (() => { try { return JSON.parse(fs.readFileSync('content/fundamentals.json', 'utf8')); } catch (e) { return {}; } })();
+fs.mkdirSync(path.join(OUT, 'data'), { recursive: true });
+fs.writeFileSync(path.join(OUT, 'data', 'fundamentals.json'), JSON.stringify(fundamentalsData));
+const DISC = `<div class="disclaimer" style="margin-top:16px;">For education only. This is factual data, not a recommendation to buy, sell or hold. Equity Investor Club is not registered with SEBI as an Investment Adviser or Research Analyst, and the founder holds this security. <a href="/disclaimer">Full disclaimer</a>.</div>`;
+page('holdings', "Stocks I invest in", `<h1>Stocks I invest in</h1>
+  <p class="lead">For transparency, these are the listed securities that Equity Investor Club's founder, Amrith Kishore M, holds in a personal portfolio. Quantities, prices and values are not shared. Tap a company to see its fundamentals and today's technical picture.</p>
+  ${stocks.length ? `<div class="cards">${stocks.map((h) => { const s = encodeURIComponent(String(h.symbol).toUpperCase()); return `<div class="card"><h3>${esc(h.name)}</h3><p class="small">${esc(h.exchange || 'NSE')}: ${esc(h.symbol)}</p><p><a class="btn btn-outline" href="/stocks/${s}/#fundamental">Fundamental analysis</a> <a class="btn btn-outline" href="/stocks/${s}/#technical">Technical analysis</a></p></div>`; }).join('')}</div>` : '<p>The list is being updated.</p>'}
+  ${holdings.updated ? `<p class="small" style="margin-top:12px;">List last updated: ${esc(new Date(holdings.updated).toDateString())}</p>` : ''}
   <div class="disclaimer" style="margin-top:16px;">This list is a disclosure of personal interest, not a recommendation. Holding a stock does not mean it is suitable for you. Equity Investor Club is not registered with SEBI as an Investment Adviser or Research Analyst. <a href="/disclaimer">Full disclaimer</a>.</div>`);
+for (const h of stocks) {
+  const sym = String(h.symbol).toUpperCase();
+  page(`stocks/${sym}`, `${h.name} (${sym})`, `<a href="/holdings" class="btn btn-outline">← All stocks</a>
+  <h1 style="margin:12px 0 4px;">${esc(h.name)}</h1><p class="small">${esc(h.exchange || 'NSE')}: ${esc(sym)}</p>
+  <div role="tablist" style="display:flex;gap:8px;margin:16px 0;"><button class="btn tab" data-tab="fundamental" role="tab">Fundamental analysis</button><button class="btn btn-outline tab" data-tab="technical" role="tab">Technical analysis</button></div>
+  <section id="fundamental" class="panel update-card"><p class="small">Loading fundamentals…</p></section>
+  <section id="technical" class="panel update-card" hidden><p class="small">Loading today's technical data…</p></section>
+  ${DISC}
+  <script>
+  (function(){
+    const SYM=${JSON.stringify(sym)}, inr=(v)=>v==null?'–':'₹'+Number(v).toLocaleString('en-IN',{maximumFractionDigits:2}), n=(v,s='')=>v==null?'–':Number(v).toLocaleString('en-IN',{maximumFractionDigits:2})+s, e=(t)=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    function show(t){document.querySelectorAll('.panel').forEach(p=>p.hidden=p.id!==t);document.querySelectorAll('.tab').forEach(b=>{const on=b.dataset.tab===t;b.classList.toggle('btn-outline',!on);b.setAttribute('aria-selected',on);});if(location.hash!=='#'+t)history.replaceState(null,'','#'+t);}
+    document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>show(b.dataset.tab)));
+    show(location.hash==='#technical'?'technical':'fundamental');
+    const row=(k,v)=>'<tr><td style="padding:6px 8px;">'+k+'</td><td style="padding:6px 8px;text-align:right;"><strong>'+v+'</strong></td></tr>';
+    fetch('/data/fundamentals.json').then(r=>r.json()).then(all=>{const f=all[SYM];const box=document.getElementById('fundamental');
+      if(!f){box.innerHTML='<p>Fundamentals for this company are being compiled and will appear here after the next weekly update.</p>';return;}
+      box.innerHTML='<h2>Fundamentals</h2>'+(f.sector?'<p class="small">Sector: '+e(f.sector)+'</p>':'')+'<p>'+e(f.about)+'</p><table style="width:100%;border-collapse:collapse;">'+
+      row('Market cap',f.market_cap_cr==null?'–':'₹'+n(f.market_cap_cr)+' cr')+row('P/E ratio',n(f.pe))+row('P/B ratio',n(f.pb))+row('Return on equity (ROE)',n(f.roe_pct,'%'))+row('Return on capital (ROCE)',n(f.roce_pct,'%'))+row('Debt to equity',n(f.debt_to_equity))+row('Dividend yield',n(f.dividend_yield_pct,'%'))+row('Revenue growth (YoY, latest quarter)',n(f.revenue_growth_yoy_pct,'%'))+row('Profit growth (YoY, latest quarter)',n(f.profit_growth_yoy_pct,'%'))+'</table>'+
+      (f.latest_results?'<h3>Latest results</h3><p>'+e(f.latest_results)+'</p>':'')+
+      ((f.strengths||[]).length?'<h3>Strengths</h3><ul>'+f.strengths.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul>':'')+((f.risks||[]).length?'<h3>Risks</h3><ul>'+f.risks.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul>':'')+
+      '<p class="small">Compiled with AI from public sources on '+e(f.compiled)+(f.as_of?' (data as of '+e(f.as_of)+')':'')+'. Figures can be wrong or out of date; check the company\\'s filings on NSE before relying on them.'+((f.sources||[]).length?' Sources: '+f.sources.map(s=>'<a href="'+e(s.uri)+'" target="_blank" rel="noopener nofollow">'+e(s.title||'link')+'</a>').join(', '):'')+'</p>';
+    }).catch(()=>{document.getElementById('fundamental').innerHTML='<p>Fundamentals are unavailable right now.</p>';});
+    fetch('/api/stock/'+encodeURIComponent(SYM)).then(r=>r.json()).then(j=>{const box=document.getElementById('technical');
+      if(!j.success){box.innerHTML='<p>'+e(j.message||'Technical data is unavailable right now.')+'</p>';return;}const t=j.data;
+      const pts=t.series,W=640,H=220,P=36,ys=pts.map(p=>p[1]),mn=Math.min(...ys),mx=Math.max(...ys),sp=mx-mn||1,x=i=>P+i*(W-2*P)/(pts.length-1),y=v=>H-P-(v-mn)*(H-2*P)/sp;
+      const up=t.change1d>=0;
+      box.innerHTML='<h2>Technical analysis</h2><p class="small">As of close on '+e(t.asOf)+' (delayed data)</p><p style="font-size:1.4rem;margin:6px 0;"><strong>'+inr(t.close)+'</strong> <span style="color:'+(up?'#22c55e':'#ef4444')+'">'+(up?'▲':'▼')+' '+n(Math.abs(t.change1d),'%')+'</span></p>'+
+      '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Closing price, last 6 months" style="width:100%;height:auto;"><polyline points="'+pts.map((p,i)=>x(i).toFixed(1)+','+y(p[1]).toFixed(1)).join(' ')+'" fill="none" stroke="#38bdf8" stroke-width="2.5"/><text x="'+P+'" y="'+(y(mx)-6)+'" font-size="12" fill="currentColor" opacity=".7">'+inr(mx)+'</text><text x="'+P+'" y="'+(y(mn)+16)+'" font-size="12" fill="currentColor" opacity=".7">'+inr(mn)+'</text><text x="'+P+'" y="'+(H-8)+'" font-size="12" fill="currentColor" opacity=".7">'+e(pts[0][0])+'</text><text x="'+(W-P)+'" y="'+(H-8)+'" font-size="12" fill="currentColor" opacity=".7" text-anchor="end">'+e(pts[pts.length-1][0])+'</text></svg>'+
+      '<table style="width:100%;border-collapse:collapse;margin-top:8px;">'+row('1-month change',n(t.change1m,'%'))+row('52-week high',inr(t.high52))+row('52-week low',inr(t.low52))+row('20-day moving average',inr(t.sma20))+row('50-day moving average',inr(t.sma50))+row('200-day moving average',inr(t.sma200))+row('RSI (14)',n(t.rsi14))+row('MACD / signal',n(t.macd)+' / '+n(t.macdSignal))+row('Volume (last day)',n(t.volume))+row('Average volume (20 days)',n(t.avgVolume20))+'</table>'+
+      '<h3>What the indicators show</h3><ul>'+t.notes.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul><p class="small">Indicators describe past price movement only and do not predict future prices. Price data: Yahoo Finance, delayed.</p>';
+    }).catch(()=>{document.getElementById('technical').innerHTML='<p>Technical data is unavailable right now.</p>';});
+  })();
+  </script>`);
+}
+
 page('disclaimer', 'Disclaimer', `<h1>Disclaimer</h1>
   <p class="small">Last updated: 14 November 2026</p>
   <h2>Not a SEBI-registered adviser</h2>

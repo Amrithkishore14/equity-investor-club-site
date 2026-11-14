@@ -4,11 +4,12 @@
 // Articles come from the CMS at /cms (content/articles/*.md, built by build.js).
 import stocks from './stocks.json';
 import posts from './posts.json';
+import { technicals, refreshFundamentals, heldSymbols } from './stocks-analysis.js';
 import { createDraft, publishToday, pruneOld, listRecent, londonParts } from './autopost.js';
 
 const IG = 'https://www.instagram.com/equityinvestorclub/';
 const NOTICE = 'Member accounts are not open yet. Follow @equityinvestorclub on Instagram for updates.';
-const MEMBER_PAGES = ['/admin', '/user', '/watchlist', '/subscription-request', '/subscriptions', '/certificate'];
+const MEMBER_PAGES = ['/admin', '/user', '/watchlist', '/subscription-request', '/subscriptions', '/certificate', '/login', '/register', '/forgot-password'];
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
@@ -63,7 +64,7 @@ class Instagram {
 
 class ToolsLink {
   element(el) {
-    el.append('<a href="/tools">Tools</a>', { html: true });
+    el.append('<a href="/articles">Articles</a><a href="/holdings">My stocks</a><a href="/tools">Tools</a>', { html: true });
   }
 }
 
@@ -81,6 +82,7 @@ class Remove {
 
 export default {
   async scheduled(event, env, ctx) {
+    if (event.cron === '0 3 * * 0') { ctx.waitUntil(refreshFundamentals(env).then((r) => console.log('fundamentals', JSON.stringify(r)))); return; }
     const { hour } = londonParts();
     if (hour === 15) ctx.waitUntil(createDraft(env).then((r) => console.log('autopost', JSON.stringify(r))));
     if (hour === 21) ctx.waitUntil(publishToday(env).then((r) => console.log('autopublish', JSON.stringify(r))).then(() => pruneOld(env)).then((r) => console.log('prune', JSON.stringify(r))));
@@ -94,9 +96,24 @@ export default {
         const q = (k) => url.searchParams.get(k);
         const r = task === 'publish' ? await publishToday(env)
           : task === 'list' ? await listRecent(Number(q('days') || 10))
+          : task === 'fundamentals' ? await refreshFundamentals(env, q('only') || '')
           : await createDraft(env, { force: q('force') === '1', videoId: q('video') || '', publish: q('publish') === '1', replace: q('replace') === '1' });
         return json(r);
       } catch (e) { return json({ ok: false, error: String(e.message || e) }, 500); }
+    }
+    const sm = url.pathname.match(/^\/api\/stock\/([A-Za-z0-9&%-]+)$/);
+    if (sm && request.method === 'GET') {
+      const sym = decodeURIComponent(sm[1]).toUpperCase();
+      if (!heldSymbols().includes(sym)) return security(json({ success: false, message: 'Not tracked' }, 404));
+      const cache = caches.default, key = new Request(`https://cache.local/stock/${sym}`);
+      const hit = await cache.match(key);
+      if (hit) return security(hit);
+      try {
+        const res = json({ success: true, data: await technicals(sym) });
+        res.headers.set('Cache-Control', 'public, max-age=21600');
+        await cache.put(key, res.clone());
+        return security(res);
+      } catch (e) { return security(json({ success: false, message: 'Price data is unavailable right now. Please try again later.' }, 502)); }
     }
     if (url.pathname.startsWith('/api/')) return security(api(url, request));
     if (MEMBER_PAGES.some((m) => url.pathname === m || url.pathname.startsWith(m + '/')))
@@ -109,7 +126,7 @@ export default {
     }
     const type = res.headers.get('content-type') || '';
     if (type.includes('text/html'))
-      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links', new ToolsLink()).on('head', new HideUnused()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
+      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).on('.nav-links a[href="/articles"]', new Remove()).on('.nav-links a[href="/tools"]', new Remove()).on('.nav-links', new ToolsLink()).on('head', new HideUnused()).on('script[src="/public/js/active.js"]', new Remove()).transform(res));
     return security(res);
   },
 };

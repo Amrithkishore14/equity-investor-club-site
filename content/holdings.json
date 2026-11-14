@@ -1,4 +1,205 @@
 {
-  "updated": "",
-  "stocks": []
+  "updated": "2026-11-14T12:00:00Z",
+  "stocks": [
+    {
+      "name": "Ashok Leyland",
+      "symbol": "ASHOKLEY",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Amara Raja Energy & Mobility",
+      "symbol": "ARE&M",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Bajaj Finserv",
+      "symbol": "BAJAJFINSV",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Bharat Petroleum (BPCL)",
+      "symbol": "BPCL",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Canara Bank",
+      "symbol": "CANBK",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Dr. Reddy's Laboratories",
+      "symbol": "DRREDDY",
+      "exchange": "NSE"
+    },
+    {
+      "name": "HCL Technologies",
+      "symbol": "HCLTECH",
+      "exchange": "NSE"
+    },
+    {
+      "name": "HDFC Bank",
+      "symbol": "HDFCBANK",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Hero MotoCorp",
+      "symbol": "HEROMOTOCO",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Hindustan Unilever",
+      "symbol": "HINDUNILVR",
+      "exchange": "NSE"
+    },
+    {
+      "name": "ICICI Bank",
+      "symbol": "ICICIBANK",
+      "exchange": "NSE"
+    },
+    {
+      "name": "IDFC First Bank",
+      "symbol": "IDFCFIRSTB",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Infosys",
+      "symbol": "INFY",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Indian Oil Corporation",
+      "symbol": "IOC",
+      "exchange": "NSE"
+    },
+    {
+      "name": "IRCTC",
+      "symbol": "IRCTC",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Indian Railway Finance Corporation (IRFC)",
+      "symbol": "IRFC",
+      "exchange": "NSE"
+    },
+    {
+      "name": "ITC",
+      "symbol": "ITC",
+      "exchange": "NSE"
+    },
+    {
+      "name": "ITC Hotels",
+      "symbol": "ITCHOTELS",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Jyothy Labs",
+      "symbol": "JYOTHYLAB",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Karnataka Bank",
+      "symbol": "KTKBANK",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Larsen & Toubro",
+      "symbol": "LT",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Natco Pharma",
+      "symbol": "NATCOPHARM",
+      "exchange": "NSE"
+    },
+    {
+      "name": "NSDL",
+      "symbol": "NSDL",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Power Grid Corporation",
+      "symbol": "POWERGRID",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Reliance Industries",
+      "symbol": "RELIANCE",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Rail Vikas Nigam (RVNL)",
+      "symbol": "RVNL",
+      "exchange": "NSE"
+    },
+    {
+      "name": "State Bank of India",
+      "symbol": "SBIN",
+      "exchange": "NSE"
+    },
+    {
+      "name": "South Indian Bank",
+      "symbol": "SOUTHBANK",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Tata Capital",
+      "symbol": "TATACAP",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Tata Steel",
+      "symbol": "TATASTEEL",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Tata Consultancy Services",
+      "symbol": "TCS",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Tech Mahindra",
+      "symbol": "TECHM",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Tejas Networks",
+      "symbol": "TEJASNET",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Tata Motors (Commercial Vehicles)",
+      "symbol": "TMCV",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Tata Motors (Passenger Vehicles)",
+      "symbol": "TMPV",
+      "exchange": "NSE"
+    },
+    {
+      "name": "United Spirits",
+      "symbol": "UNITDSPR",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Wipro",
+      "symbol": "WIPRO",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Zydus Lifesciences",
+      "symbol": "ZYDUSLIFE",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Nippon India ETF Gold BeES",
+      "symbol": "GOLDBEES",
+      "exchange": "NSE"
+    },
+    {
+      "name": "Nippon India Silver ETF",
+      "symbol": "SILVERBEES",
+      "exchange": "NSE"
+    }
+  ]
 }
