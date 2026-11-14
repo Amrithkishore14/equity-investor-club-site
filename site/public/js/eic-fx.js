@@ -46,7 +46,7 @@
       const n = d.indices[0], up = n.pct >= 0, pts = n.spark || [];
       const mn = Math.min(...pts), mx = Math.max(...pts), sp = mx - mn || 1, W = 600, H = 140;
       const xy = pts.map((v, i) => [(i * W) / (pts.length - 1), H - 10 - ((v - mn) * (H - 20)) / sp]);
-      const line = xy.map((p) => p.join(',')).join(' '), col = up ? '#2FBF71' : '#FF6B5E';
+      const line = xy.map((p) => p.join(',')).join(' '), col = up ? '#22C55E' : '#EF4444';
       hero.innerHTML = `<div class="fx-label"><span class="fx-dot"></span>NIFTY 50 · last close ${esc(d.asOf)}</div>
         <div class="fx-big" id="fxBig">${f(n.price)}</div>
         <div class="fx-chg ${up ? 'up' : 'down'}">${up ? '▲ +' : '▼ '}${f(n.change)} (${up ? '+' : ''}${f(n.pct)}%) today</div>
@@ -65,7 +65,7 @@
     // Heat-map (homepage)
     const heat = document.getElementById('fxHeat');
     if (heat && d.stocks.length) {
-      const col = (p) => { const k = Math.max(-1, Math.min(1, p / 3)); return k >= 0 ? `rgb(${Math.round(58 - 40 * k)},${Math.round(74 + 54 * k)},${Math.round(79 - 5 * k)})` : `rgb(${Math.round(58 + 122 * -k)},${Math.round(74 - 39 * -k)},${Math.round(79 - 32 * -k)})`; };
+      const col = (p) => { const k = Math.max(-1, Math.min(1, p / 3)); const n = [42, 50, 66], g = [21, 128, 61], r = [185, 28, 28], t = k >= 0 ? g : r, a = Math.abs(k); return `rgb(${n.map((v, i) => Math.round(v + (t[i] - v) * a)).join(',')})`; };
       heat.innerHTML = d.stocks.map((s) => `<a class="fx-cell" style="background:${col(s.pct)}" href="/stocks/${encodeURIComponent(s.symbol)}/#technical" title="${esc(s.full || s.name)}"><span class="s">${esc(s.name)}</span><span class="p">${s.pct >= 0 ? '+' : ''}${f(s.pct)}%</span></a>`).join('');
     }
   }).catch(() => {});
