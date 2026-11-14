@@ -4,7 +4,7 @@
 // Articles come from the CMS at /cms (content/articles/*.md, built by build.js).
 import stocks from './stocks.json';
 import posts from './posts.json';
-import { createDraft, publishToday, londonParts } from './autopost.js';
+import { createDraft, publishToday, pruneOld, londonParts } from './autopost.js';
 
 const IG = 'https://www.instagram.com/equityinvestorclub/';
 const NOTICE = 'Member accounts are not open yet. Follow @equityinvestorclub on Instagram for updates.';
@@ -49,7 +49,7 @@ function api(url, request) {
 
 class Instagram {
   element(el) {
-    el.append(`<p class="small"><a href="${IG}" target="_blank" rel="noopener">Follow @equityinvestorclub on Instagram</a></p>`, { html: true });
+    el.append(`<p class="small"><a href="${IG}" target="_blank" rel="noopener">Follow @equityinvestorclub on Instagram</a><br>Founded by <a href="https://2026-updated-portfolio.amrithkishore6.workers.dev" target="_blank" rel="noopener">Amrith Kishore M</a></p>`, { html: true });
   }
 }
 
@@ -69,7 +69,7 @@ export default {
   async scheduled(event, env, ctx) {
     const { hour } = londonParts();
     if (hour === 15) ctx.waitUntil(createDraft(env).then((r) => console.log('autopost', JSON.stringify(r))));
-    if (hour === 21) ctx.waitUntil(publishToday(env).then((r) => console.log('autopublish', JSON.stringify(r))));
+    if (hour === 21) ctx.waitUntil(publishToday(env).then((r) => console.log('autopublish', JSON.stringify(r))).then(() => pruneOld(env)).then((r) => console.log('prune', JSON.stringify(r))));
   },
   async fetch(request, env) {
     const url = new URL(request.url);

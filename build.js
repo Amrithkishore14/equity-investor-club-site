@@ -29,6 +29,8 @@ const now = Date.now();
 const posts = (fs.existsSync(POSTS) ? fs.readdirSync(POSTS) : []).filter((f) => f.endsWith('.md'))
   .map((f) => ({ f, ...parse(path.join(POSTS, f)) }))
   .filter((p) => p.data.title && p.data.draft !== true && (!p.data.date || Date.parse(p.data.date) <= now))
+  // Robot posts only stay on the site for 30 days; your own articles stay until you delete them.
+  .filter((p) => !(p.data.auto === true && p.data.date && now - Date.parse(p.data.date) > 30 * 864e5))
   .map((p) => {
     const plain = p.body.replace(/[#*_>`\[\]()!-]/g, ' ').replace(/\s+/g, ' ').trim();
     return { ...p, slug: slugify(p.data.slug || p.f.replace(/\.md$/, '').replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/^auto-/, '')),
