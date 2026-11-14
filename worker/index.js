@@ -129,9 +129,9 @@ class Remove {
 export default {
   async scheduled(event, env, ctx) {
     if (event.cron === '0 3 * * 0') { ctx.waitUntil(refreshFundamentals(env).then((r) => console.log('fundamentals', JSON.stringify(r)))); return; }
-    const { hour } = londonParts();
-    if (hour === 15) ctx.waitUntil(createDraft(env).then((r) => console.log('autopost', JSON.stringify(r))));
-    if (hour === 21) ctx.waitUntil(publishToday(env).then((r) => console.log('autopublish', JSON.stringify(r))).then(() => pruneOld(env)).then((r) => console.log('prune', JSON.stringify(r))));
+    // India has no daylight saving, so these are fixed: 11:30 UTC = 5:00pm IST, 12:30 UTC = 6:00pm IST.
+    if (event.cron === '30 11 * * *') ctx.waitUntil(createDraft(env).then((r) => console.log('autopost', JSON.stringify(r))));
+    if (event.cron === '30 12 * * *') ctx.waitUntil(publishToday(env).then((r) => console.log('autopublish', JSON.stringify(r))).then(() => pruneOld(env)).then((r) => console.log('prune', JSON.stringify(r))));
   },
   async fetch(request, env) {
     const url = new URL(request.url);
