@@ -106,11 +106,28 @@ async function translateMarkdown(env, md) {
 }
 
 function extractJson(s) {
+  if (s && typeof s === 'object') return s;
   const a = s.indexOf('{'), b = s.lastIndexOf('}');
-  return JSON.parse(s.slice(a, b + 1));
+  const raw = s.slice(a, b + 1);
+  try { return JSON.parse(raw); } catch (e) {}
+  // Escape raw control characters that appear inside string values.
+  let out = '', inStr = false, esc = false;
+  for (const ch of raw) {
+    if (inStr) {
+      if (esc) { out += ch; esc = false; continue; }
+      if (ch === '\\') { out += ch; esc = true; continue; }
+      if (ch === '"') { inStr = false; out += ch; continue; }
+      if (ch === '\n') { out += '\\n'; continue; }
+      if (ch === '\r') { continue; }
+      if (ch === '\t') { out += '\\t'; continue; }
+      if (ch.charCodeAt(0) < 32) continue;
+      out += ch;
+    } else { if (ch === '"') inStr = true; out += ch; }
+  }
+  return JSON.parse(out);
 }
 
-async function writeArticle(env, video, source) {
+async function writeArticle(env, video, source, jsonMode = true) {
   const system = `You are the editor of Equity Investor Club, a financial-literacy website for beginner investors in India.
 Write an ORIGINAL educational article in your own words based only on the notes provided. Do not copy sentences from the notes and do not invent facts, numbers or news that are not in the notes.
 Never give buy/sell/hold advice on a specific stock; explain ideas and what a beginner should understand instead.
@@ -121,7 +138,7 @@ Reply with ONLY a JSON object with these keys:
 "quiz" (array of 3 objects: {"q": question, "options": [4 short options], "answer": index 0-3}),
 "check" (one sentence on anything the editor should double-check, or "" if nothing).`;
   const user = `Video title: ${video.title}\nPublished: ${video.published}\n\nNotes (${source.kind}):\n${source.text.slice(0, 14000)}`;
-  const r = await env.AI.run(LLM, { messages: [{ role: 'system', content: system }, { role: 'user', content: user }], max_tokens: 2200, temperature: 0.4 });
+  const r = await env.AI.run(LLM, { messages: [{ role: 'system', content: system }, { role: 'user', content: user }], max_tokens: 2400, temperature: 0.4, ...(jsonMode ? { response_format: { type: 'json_object' } } : {}) });
   return extractJson(r.response || '');
 }
 
@@ -153,7 +170,9 @@ export async function createDraft(env, { force = false } = {}) {
     note = 'The transcript was not available today, so this draft is based only on the video title and description. Please check it carefully before publishing. ';
   }
 
-  const a = await writeArticle(env, video, source);
+  let a;
+  try { a = await writeArticle(env, video, source); }
+  catch (e) { a = await writeArticle(env, video, source, false); }
   if (a.check) note += `Robot's check: ${a.check}`;
   const [titleTa, summaryTa, bodyTa] = [await translate(env, a.title, 'en', 'ta'), await translate(env, a.summary, 'en', 'ta'), await translateMarkdown(env, a.body)];
 
@@ -176,7 +195,7 @@ export async function createDraft(env, { force = false } = {}) {
   const yaml = Object.entries(fm).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n');
   const md = `---\n${yaml}\n---\n${a.body.trim()}\n`;
   await putFile(env, `${DIR}/${slug}.md`, b64(md), `Robot draft: ${a.title}`);
-  return { ok: true, created: slug, transcript: !!tr };
+  return { ok: true, created: slug, video: video.title, transcript: tr ? `${tr.lang}, ${tr.text.length} chars` : 'not available' };
 }
 
 export async function publishToday(env) {
