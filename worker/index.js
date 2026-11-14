@@ -27,7 +27,6 @@ function api(url, request) {
   const p = url.pathname;
   if (request.method === 'GET') {
     if (p === '/api/me') return json({ success: false }, 401);
-    if (p === '/api/active-users') return json({ success: true, count: 1 });
     if (p === '/api/stocks/search') {
       const t = (url.searchParams.get('q') || '').toLowerCase().slice(0, 40);
       const results = t ? stocks.filter((s) => s.symbol.toLowerCase().includes(t) || s.stock_name.toLowerCase().includes(t)).slice(0, 15) : [];
