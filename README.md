@@ -1,11 +1,8 @@
-# Equity Investor Club – Cloudflare showcase
+# Equity Investor Club website
 
-The public site for Equity Investor Club, a financial-literacy community Amrith Kishore M founded in 2023.
+Public website for Equity Investor Club, a financial-literacy community founded by Amrith Kishore M in 2023. Hosted on Cloudflare Workers.
 
-Hosted on Cloudflare Workers (static assets + a small Worker):
+- Learning pages, glossary, SIP/SWP calculators, risk quiz and NSE/BSE stock search.
+- Articles are written in the CMS at `/cms` (sign in with a GitHub token). Saving a post commits it to `content/articles/`, and Cloudflare rebuilds the site in about a minute.
 
-- All learning pages, the glossary, SIP/SWP calculators, risk quiz and the NSE/BSE stock search (2,294 listed companies) work.
-- Accounts, payments (Razorpay) and emails are switched off in this build, so it holds no secrets and no user data.
-- The full Express + SQLite app (auth with bcrypt, sessions, admin dashboard, subscriptions) is at https://github.com/Amrithkishore14/equity.
-
-Deploy: Cloudflare Workers Builds runs `npx wrangler deploy` on every push to `main`.
+Build: `npm run build` (generates `dist/` and the articles feed). Deploy: `npx wrangler deploy`.

@@ -1,10 +1,12 @@
 // Equity Investor Club - Cloudflare showcase.
 // Public pages, calculators, quiz and stock search work fully.
-// Accounts, payments and emails are switched off here: the full Express + SQLite
-// backend lives in github.com/Amrithkishore14/equity and holds no secrets in this build.
+// Accounts, payments and emails are switched off here, so this build holds no secrets.
+// Articles come from the CMS at /cms (content/articles/*.md, built by build.js).
 import stocks from './stocks.json';
+import posts from './posts.json';
 
-const NOTICE = 'This is the public showcase of Equity Investor Club. Accounts, payments and messages are switched off here.';
+const IG = 'https://www.instagram.com/equityinvestorclub/';
+const NOTICE = 'Member accounts are not open yet. Follow @equityinvestorclub on Instagram for updates.';
 const MEMBER_PAGES = ['/admin', '/user', '/watchlist', '/subscription-request'];
 
 const json = (body, status = 200) =>
@@ -35,7 +37,7 @@ function api(url, request) {
     if (p === '/api/news/latest') return json({ success: true, news: null });
     if (p === '/api/digest/latest') return json({ success: true, latest: null, archive: [] });
     if (p === '/api/poll') return json({ success: true, poll: null });
-    if (p === '/api/articles') return json({ success: true, articles: [] });
+    if (p === '/api/articles') return json({ success: true, articles: posts });
     if (/^\/api\/articles\/\d+\/comments$/.test(p)) return json({ success: true, comments: [] });
     if (p.startsWith('/api/admin') || p.startsWith('/api/user') || p.startsWith('/api/watchlist') || p === '/api/certificate')
       return json({ success: false, message: 'Sign-in is switched off on this showcase.' }, 401);
@@ -45,12 +47,15 @@ function api(url, request) {
   return json({ success: false }, 405);
 }
 
-class Banner {
+class Instagram {
   element(el) {
-    el.prepend(
-      `<div style="position:relative;z-index:9999;background:#0f172a;color:#e2e8f0;font:14px/1.4 system-ui,sans-serif;padding:8px 16px;text-align:center;border-bottom:1px solid #334155">${NOTICE} <a href="https://github.com/Amrithkishore14/equity" style="color:#38bdf8">View the full source</a></div>`,
-      { html: true }
-    );
+    el.append(`<p class="small"><a href="${IG}" target="_blank" rel="noopener">Follow @equityinvestorclub on Instagram</a></p>`, { html: true });
+  }
+}
+
+class Remove {
+  element(el) {
+    el.remove();
   }
 }
 
@@ -60,10 +65,15 @@ export default {
     if (url.pathname.startsWith('/api/')) return security(api(url, request));
     if (MEMBER_PAGES.some((m) => url.pathname === m || url.pathname.startsWith(m + '/')))
       return Response.redirect(new URL('/login', url).toString(), 302);
-    if (url.pathname.startsWith('/articles/')) return Response.redirect(new URL('/articles', url).toString(), 302);
     const res = await env.ASSETS.fetch(request);
+    if (url.pathname.startsWith('/cms')) {
+      const r = security(res);
+      r.headers.set('X-Robots-Tag', 'noindex, nofollow');
+      return r;
+    }
     const type = res.headers.get('content-type') || '';
-    if (type.includes('text/html')) return security(new HTMLRewriter().on('body', new Banner()).transform(res));
+    if (type.includes('text/html'))
+      return security(new HTMLRewriter().on('a[href="/login"]', new Remove()).on('a[href="/register"]', new Remove()).on('.footer-grid', new Instagram()).transform(res));
     return security(res);
   },
 };

@@ -1,0 +1,24 @@
+backend:
+  name: github
+  repo: Amrithkishore14/equity-investor-club-site
+  branch: main
+media_folder: site/public/uploads
+public_folder: /public/uploads
+site_url: https://equity-investor-club.amrithkishore6.workers.dev
+collections:
+  - name: articles
+    label: Articles
+    label_singular: Article
+    folder: content/articles
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    summary: "{{title}} ({{date}})"
+    sortable_fields: [date, title]
+    fields:
+      - { name: title, label: Title, widget: string }
+      - { name: date, label: Publish date, widget: datetime, hint: "Posts with a future date go live on the first build after that date." }
+      - { name: summary, label: Short summary, widget: text, required: false, hint: "Shown on the Articles page. Leave empty to use the first lines." }
+      - { name: category, label: Category, widget: select, required: false, options: [Basics, Stock market, Mutual funds, Personal finance, Market update] }
+      - { name: cover, label: Cover image, widget: image, required: false }
+      - { name: draft, label: Draft (hidden), widget: boolean, default: false }
+      - { name: body, label: Article, widget: markdown }
