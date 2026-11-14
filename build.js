@@ -180,5 +180,5 @@ page('disclaimer', 'Disclaimer', `<h1>Disclaimer</h1>
 
 const takeaways = (body) => { const m = body.split(/^##\s+Key takeaways.*$/im)[1]; return m ? m.split(/^##\s/m)[0].split('\n').filter((l) => /^\s*[-*]\s/.test(l)).map((l) => l.replace(/^\s*[-*]\s+/, '').replace(/\*\*/g, '').trim()).slice(0, 4) : []; };
 fs.writeFileSync('worker/posts.json', JSON.stringify(posts.map((p) => ({ id: p.slug, title: p.data.title, slug: p.slug, excerpt: p.excerpt, publish_at: p.data.date || null,
-  cover: p.data.cover || '', tip: p.data.tip || '', takeaways: takeaways(p.body), quiz: Array.isArray(p.data.quiz) ? p.data.quiz.slice(0, 1) : [] }))));
+  cover: p.data.cover || '', category: p.data.category || '', tip: p.data.tip || '', takeaways: takeaways(p.body), quiz: Array.isArray(p.data.quiz) ? p.data.quiz.slice(0, 1) : [] }))));
 console.log(`Built ${posts.length} article(s).`);
