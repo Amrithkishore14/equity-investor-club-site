@@ -4,7 +4,7 @@ date: "2026-11-15T11:30:47.653Z"
 summary: "Domestic Institutional Investors (DIIs) have reportedly sold shares worth approximately 46,000 crore rupees in November, a notable shift from their usual role as market stabilizers. This activity raises questions for individual investors about market direction and long-term strategy."
 category: "Market update"
 cover: "/public/uploads/auto/2026-11-15-auto-diis-significant-selling-what-it-means-for-indian-investors.jpg"
-draft: true
+draft: false
 hold: false
 auto: true
 note: "Please verify: The exact net selling figure of 46,000 crore rupees by DIIs in November."
