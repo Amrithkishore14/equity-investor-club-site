@@ -4,7 +4,7 @@ date: "2026-11-20T11:31:18.238Z"
 summary: "Intel, a global technology giant, has been undergoing significant layoffs as part of broader cost-cutting measures. This trend is not isolated, with other major tech companies also reducing their workforce amidst rising interest rates and economic uncertainties."
 category: "Market update"
 cover: "/public/uploads/auto/2026-11-20-auto-intel-s-mass-layoffs-what-it-means-for-the-tech-industry.jpg"
-draft: true
+draft: false
 hold: false
 auto: true
 note: "Please verify: Verify the reported figure of 4,000 Intel layoffs against reputable news sources for a specific round of layoffs."
