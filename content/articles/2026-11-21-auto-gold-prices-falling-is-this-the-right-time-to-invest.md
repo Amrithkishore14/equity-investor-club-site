@@ -4,7 +4,7 @@ date: "2026-11-21T11:31:16.907Z"
 summary: "Gold prices in India have seen a significant correction recently, presenting a potential opportunity for investors. Understanding the market dynamics during such dips can help beginners make informed decisions."
 category: "Market update"
 cover: "/public/uploads/auto/2026-11-21-auto-gold-prices-falling-is-this-the-right-time-to-invest.jpg"
-draft: true
+draft: false
 hold: false
 auto: true
 note: "Please verify: The specific percentage fall of gold prices from its peak in early 2026 to November 2026, and the current approximate price per 10 grams."
