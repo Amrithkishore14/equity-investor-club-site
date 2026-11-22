@@ -4,7 +4,7 @@ date: "2026-11-22T11:30:49.376Z"
 summary: "Gold prices are currently hovering around $3,500 per ounce, influenced by global interest rate movements. Investors should understand the inverse relationship between interest rates and gold values."
 category: "Market update"
 cover: "/public/uploads/auto/2026-11-22-auto-gold-prices-understanding-current-trends-and-future-outlook.jpg"
-draft: true
+draft: false
 hold: false
 auto: true
 note: "Please verify: Verify the current live gold price per ounce (USD) as of the publication date."
